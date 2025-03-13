@@ -1,0 +1,65 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "heir",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "transferAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "transferFrequency",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "willActivateWaitingPeriod",
+          "type": "uint256"
+        }
+      ],
+      "name": "createSmartWill",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getDeployedWills",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "willAddress",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "WillCreated",
+      "type": "event"
+    }
+  ],
+  "bytecode": "0x600060005560..."
+}
