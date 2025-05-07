@@ -11,7 +11,7 @@ import {
 import { ethers } from "ethers";
 import factoryAbi from "../contracts/SmartWillFactory.json";
 
-const FACTORY_ADDRESS = "0x358B00a05019308373f0F6E61b7A2d9044f299F6"; // Адрес вашей фабрики
+const FACTORY_ADDRESS = "0x4Acc5767812147106a51E5b8292151A136eC81ba"; // Адрес вашей фабрики
 
 interface Props {
     signer: ethers.Signer;
@@ -26,6 +26,7 @@ export default function CreateWillForm({ signer, onWillCreated }: Props) {
         waitingPeriod: 180,
         deposit: ""
     });
+    const [loading, setLoading] = useState(false);
 
     const toast = useToast();
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,6 +35,7 @@ export default function CreateWillForm({ signer, onWillCreated }: Props) {
 
     const handleSubmit = async () => {
         try {
+            setLoading(true);
             const factory = new ethers.Contract(FACTORY_ADDRESS, factoryAbi.abi, signer);
             const tx = await factory.createSmartWill(
                 form.heir,
@@ -42,15 +44,47 @@ export default function CreateWillForm({ signer, onWillCreated }: Props) {
                 Number(form.waitingPeriod),
                 { value: ethers.parseEther(form.deposit) }
             );
+            
+            toast({ 
+                title: "Транзакция отправлена", 
+                description: "Ожидание подтверждения...", 
+                status: "info",
+                duration: 5000
+            });
+            
             const receipt = await tx.wait();
             const event = receipt.logs.find((log: any) => log.fragment?.name === "WillCreated");
             const newAddress = event?.args?.willAddress;
+            
             if (newAddress) {
+                toast({ 
+                    title: "Завещание создано", 
+                    description: `Новое завещание по адресу: ${newAddress}`, 
+                    status: "success",
+                    duration: 5000
+                });
+                
+                // Очистка формы
+                setForm({
+                    heir: "",
+                    transferAmount: "",
+                    frequency: 60,
+                    waitingPeriod: 180,
+                    deposit: ""
+                });
+                
+                // Вызываем коллбек для переключения на вкладку "Мои завещания"
                 onWillCreated(newAddress);
-                toast({ title: "Завещание создано", description: newAddress, status: "success" });
             }
         } catch (err: any) {
-            toast({ title: "Ошибка", description: err.message, status: "error" });
+            toast({ 
+                title: "Ошибка", 
+                description: err.message, 
+                status: "error",
+                duration: 5000
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -59,25 +93,31 @@ export default function CreateWillForm({ signer, onWillCreated }: Props) {
             <VStack spacing={3}>
                 <FormControl>
                     <FormLabel>Адрес наследника</FormLabel>
-                    <Input name="heir" onChange={handleChange} />
+                    <Input name="heir" value={form.heir} onChange={handleChange} />
                 </FormControl>
                 <FormControl>
                     <FormLabel>Сумма перевода (ETH)</FormLabel>
-                    <Input name="transferAmount" onChange={handleChange} />
+                    <Input name="transferAmount" value={form.transferAmount} onChange={handleChange} />
                 </FormControl>
                 <FormControl>
                     <FormLabel>Частота выплат (секунды)</FormLabel>
-                    <Input name="frequency" onChange={handleChange} />
+                    <Input name="frequency" value={form.frequency} onChange={handleChange} />
                 </FormControl>
                 <FormControl>
                     <FormLabel>Период ожидания (секунды)</FormLabel>
-                    <Input name="waitingPeriod" onChange={handleChange} />
+                    <Input name="waitingPeriod" value={form.waitingPeriod} onChange={handleChange} />
                 </FormControl>
                 <FormControl>
                     <FormLabel>Депозит (ETH)</FormLabel>
-                    <Input name="deposit" onChange={handleChange} />
+                    <Input name="deposit" value={form.deposit} onChange={handleChange} />
                 </FormControl>
-                <Button colorScheme="green" onClick={handleSubmit}>
+                <Button 
+                    colorScheme="green" 
+                    onClick={handleSubmit} 
+                    isLoading={loading}
+                    loadingText="Создание..."
+                    isDisabled={!form.heir || !form.transferAmount || !form.deposit}
+                >
                     Создать завещание
                 </Button>
             </VStack>

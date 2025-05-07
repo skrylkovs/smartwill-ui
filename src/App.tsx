@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ethers } from "ethers";
 import {
     Button,
@@ -12,13 +12,14 @@ import CreateWillForm from "./components/CreateWillForm";
 import MyWills from "./components/MyWills";
 import factoryAbi from "./contracts/SmartWillFactory.json";
 
-const FACTORY_ADDRESS = "0x358B00a05019308373f0F6E61b7A2d9044f299F6";
+const FACTORY_ADDRESS = "0x4Acc5767812147106a51E5b8292151A136eC81ba";
 
 function App() {
     const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
     const [signer, setSigner] = useState<ethers.Signer | null>(null);
     const [account, setAccount] = useState<string>("");
     const [showMyWills, setShowMyWills] = useState(false);
+    const myWillsRef = useRef<any>(null);
 
     const connect = async () => {
         if (!window.ethereum) return alert("Установите MetaMask");
@@ -28,6 +29,20 @@ function App() {
         setProvider(web3Provider);
         setSigner(signer);
         setAccount(address);
+    };
+    
+    // Обработчик события создания завещания
+    const handleWillCreated = (willAddress: string) => {
+        // Переключаемся на вкладку "Мои завещания"
+        setShowMyWills(true);
+        
+        // Даем небольшую задержку для переключения вкладки
+        setTimeout(() => {
+            // Если есть ссылка на компонент MyWills, вызываем обновление
+            if (myWillsRef.current && typeof myWillsRef.current.loadWills === 'function') {
+                myWillsRef.current.loadWills();
+            }
+        }, 100);
     };
 
     return (
@@ -48,9 +63,12 @@ function App() {
                             </Button>
                         </HStack>
                         {showMyWills ? (
-                            <MyWills signer={signer!} />
+                            <MyWills 
+                                signer={signer!} 
+                                ref={myWillsRef}
+                            />
                         ) : (
-                            <CreateWillForm signer={signer!} onWillCreated={() => {}} />
+                            <CreateWillForm signer={signer!} onWillCreated={handleWillCreated} />
                         )}
                     </>
                 )}
