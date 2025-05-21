@@ -43,7 +43,7 @@ function App() {
     const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
     const [signer, setSigner] = useState<ethers.Signer | null>(null);
     const [account, setAccount] = useState<string>("");
-    const [showMyWills, setShowMyWills] = useState(false);
+    const [showMyWills, setShowMyWills] = useState(true);
     const [factoryAddress, setFactoryAddress] = useState<string>("");
     const [network, setNetwork] = useState<{ chainId: number; name: string } | null>(null);
     const [isLoadingFactory, setIsLoadingFactory] = useState(false);
