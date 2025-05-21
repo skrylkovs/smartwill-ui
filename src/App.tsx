@@ -11,12 +11,33 @@ import {
     Alert,
     AlertIcon,
     AlertTitle,
-    AlertDescription
+    AlertDescription,
+    useToast
 } from "@chakra-ui/react";
 import CreateWillForm from "./components/CreateWillForm";
 import MyWills from "./components/MyWills";
 import DeployFactoryButton from "./components/DeployFactoryButton";
 import factoryAbi from "./contracts/SmartWillFactory.json";
+
+// Конфигурация приложения
+const CONFIG = {
+    // API-ключ Arbiscan - замените на свой реальный ключ
+    ARBISCAN_API_KEY: "EER1P87Y4I6R4JT9K3KYRWTVWET72VGH5V"
+};
+
+// Интерфейс для транзакции из Arbiscan API
+interface ArbiscanTransaction {
+    blockNumber: string;
+    timeStamp: string;
+    hash: string;
+    from: string;
+    to: string;
+    value: string;
+    contractAddress: string;
+    input: string;
+    isError: string;
+    txreceipt_status: string;
+}
 
 function App() {
     const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
@@ -25,7 +46,9 @@ function App() {
     const [showMyWills, setShowMyWills] = useState(false);
     const [factoryAddress, setFactoryAddress] = useState<string>("");
     const [network, setNetwork] = useState<{ chainId: number; name: string } | null>(null);
+    const [isLoadingFactory, setIsLoadingFactory] = useState(false);
     const myWillsRef = useRef<any>(null);
+    const toast = useToast();
 
     // Загружаем адрес фабрики при инициализации
     useEffect(() => {
@@ -82,6 +105,137 @@ function App() {
     const handleFactoryDeployed = (address: string) => {
         setFactoryAddress(address);
     };
+    
+    // Функция для получения транзакций пользователя через Arbiscan API
+    const getTransactionsFromArbiscan = async (address: string): Promise<ArbiscanTransaction[]> => {
+        const apiKey = CONFIG.ARBISCAN_API_KEY;
+        
+        if (!apiKey || apiKey === "ВАИШ_ARBISCAN_API_КЛЮЧ") {
+            throw new Error("API ключ Arbiscan не настроен в конфигурации приложения");
+        }
+        
+        const url = `https://api-sepolia.arbiscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=desc&apikey=${apiKey}`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.status !== "1") {
+            throw new Error(`Ошибка Arbiscan API: ${data.message}`);
+        }
+        
+        return data.result as ArbiscanTransaction[];
+    };
+    
+    // Проверка, является ли контракт фабрикой SmartWillFactory
+    const isSmartWillFactory = async (contractAddress: string): Promise<boolean> => {
+        if (!provider) return false;
+        
+        try {
+            // Проверяем, есть ли код по этому адресу
+            const code = await provider.getCode(contractAddress);
+            if (code === '0x') return false;
+            
+            // Создаем экземпляр контракта
+            const contract = new ethers.Contract(contractAddress, factoryAbi.abi, provider);
+            
+            try {
+                // Пытаемся вызвать метод getDeployedWills, который должен быть у фабрики
+                await contract.getDeployedWills();
+                return true;
+            } catch (err) {
+                return false;
+            }
+        } catch (err) {
+            return false;
+        }
+    };
+    
+    // Функция для получения последней фабрики по адресу кошелька через Arbiscan API
+    const findLatestFactory = async () => {
+        if (!signer || !account) {
+            toast({
+                title: "Ошибка",
+                description: "Не подключен кошелек",
+                status: "error",
+                duration: 5000
+            });
+            return;
+        }
+        
+        try {
+            setIsLoadingFactory(true);
+            toast({
+                title: "Поиск фабрики",
+                description: "Ищем вашу последнюю фабрику SmartWillFactory через Arbiscan...",
+                status: "info",
+                duration: 3000
+            });
+            
+            // Получаем все транзакции пользователя
+            const transactions = await getTransactionsFromArbiscan(account);
+            
+            // Фильтруем транзакции, где создаются контракты
+            // contractAddress будет не пустым, если транзакция создала контракт
+            const contractCreations = transactions.filter(tx => 
+                tx.contractAddress !== "" && 
+                tx.isError === "0" && 
+                tx.from.toLowerCase() === account.toLowerCase()
+            );
+            
+            if (contractCreations.length === 0) {
+                toast({
+                    title: "Фабрики не найдены",
+                    description: "С вашего адреса не было создано контрактов",
+                    status: "warning",
+                    duration: 5000
+                });
+                return;
+            }
+            
+            console.log(`Найдено ${contractCreations.length} транзакций создания контрактов`);
+            
+            // Проверяем каждый созданный контракт, начиная с самого последнего
+            for (const tx of contractCreations) {
+                const contractAddress = tx.contractAddress;
+                console.log(`Проверяем контракт: ${contractAddress}`);
+                
+                const isFactory = await isSmartWillFactory(contractAddress);
+                
+                if (isFactory) {
+                    // Сохраняем адрес фабрики
+                    localStorage.setItem("factoryAddress", contractAddress);
+                    setFactoryAddress(contractAddress);
+                    
+                    toast({
+                        title: "Фабрика найдена",
+                        description: `Найдена ваша фабрика по адресу: ${contractAddress}`,
+                        status: "success",
+                        duration: 5000
+                    });
+                    return;
+                }
+            }
+            
+            // Если ни один из контрактов не является фабрикой
+            toast({
+                title: "Фабрика не найдена",
+                description: "Среди созданных контрактов не найдено фабрик SmartWillFactory",
+                status: "warning",
+                duration: 5000
+            });
+            
+        } catch (err: any) {
+            console.error("Ошибка при поиске фабрики:", err);
+            toast({
+                title: "Ошибка поиска фабрики",
+                description: err.message || "Произошла ошибка при поиске фабрики",
+                status: "error",
+                duration: 5000
+            });
+        } finally {
+            setIsLoadingFactory(false);
+        }
+    };
 
     // Проверяем, находимся ли мы на правильной сети (Arbitrum Sepolia)
     const isCorrectNetwork = network && network.chainId === 421614;
@@ -116,11 +270,21 @@ function App() {
                         
                         {!factoryAddress ? (
                             <Box>
-                                <Text mb={3}>Необходимо развернуть фабрику контрактов</Text>
-                                <DeployFactoryButton 
-                                    signer={signer!} 
-                                    onFactoryDeployed={handleFactoryDeployed} 
-                                />
+                                <Text mb={3}>Необходимо развернуть фабрику контрактов или найти существующую</Text>
+                                <VStack spacing={3} align="stretch">
+                                    <DeployFactoryButton 
+                                        signer={signer!} 
+                                        onFactoryDeployed={handleFactoryDeployed} 
+                                    />
+                                    <Button 
+                                        colorScheme="teal" 
+                                        onClick={findLatestFactory}
+                                        isLoading={isLoadingFactory}
+                                        loadingText="Поиск фабрики..."
+                                    >
+                                        Получить последнюю фабрику SmartWillFactory
+                                    </Button>
+                                </VStack>
                             </Box>
                         ) : (
                             <>
