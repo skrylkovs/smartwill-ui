@@ -22,6 +22,7 @@ import factoryAbi from "../contracts/SmartWillFactory.json";
 
 interface MyWillsProps {
     signer: ethers.Signer;
+    factoryAddress: string;
 }
 
 // Экспортируем тип для использования в других компонентах
@@ -33,10 +34,8 @@ export interface WillInfo {
     transferFrequency: string;
 }
 
-const FACTORY_ADDRESS = "0x4Acc5767812147106a51E5b8292151A136eC81ba";
-
 // Изменяем на forwardRef и экспортируем методы через useImperativeHandle
-const MyWills = forwardRef(({ signer }: MyWillsProps, ref) => {
+const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const [wills, setWills] = useState<WillInfo[]>([]);
     const [lastPing, setLastPing] = useState<string>("Загрузка...");
     const [loading, setLoading] = useState(false);
@@ -74,7 +73,7 @@ const MyWills = forwardRef(({ signer }: MyWillsProps, ref) => {
         try {
             if (!signer) return;
             
-            const factory = new ethers.Contract(FACTORY_ADDRESS, factoryAbi.abi, signer);
+            const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
             const signerAddress = await signer.getAddress();
             
             // Пробуем получить последний пинг разными способами
@@ -130,7 +129,7 @@ const MyWills = forwardRef(({ signer }: MyWillsProps, ref) => {
     const handlePingAll = async () => {
         try {
             setPingLoading(true);
-            const factory = new ethers.Contract(FACTORY_ADDRESS, factoryAbi.abi, signer);
+            const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
             
             // Отправляем один пинг в фабрику
             const tx = await factory.ping();
@@ -165,7 +164,7 @@ const MyWills = forwardRef(({ signer }: MyWillsProps, ref) => {
     const loadWills = async () => {
         try {
             setLoading(true);
-            const factory = new ethers.Contract(FACTORY_ADDRESS, factoryAbi.abi, signer);
+            const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
             
             // Получаем все развернутые завещания
             // Используем альтернативный подход для получения списка завещаний
