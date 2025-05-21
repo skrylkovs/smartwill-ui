@@ -43,7 +43,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const toast = useToast();
 
     // Получение информации о завещании
-    const fetchWillInfo = async (willAddress: string) => {
+    const fetchWillInfo = async (willAddress: string, retryCount = 3, delayMs = 1000) => {
         try {
             const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
             
@@ -64,7 +64,26 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             };
         } catch (error) {
             console.error(`Ошибка при получении информации о завещании ${willAddress}:`, error);
-            return null;
+            
+            // Если у нас остались попытки, ждем и пробуем снова
+            if (retryCount > 0) {
+                console.log(`Повторная попытка (осталось ${retryCount}) для контракта ${willAddress} через ${delayMs}мс...`);
+                
+                // Ожидаем указанное время
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+                
+                // Рекурсивно вызываем функцию с уменьшенным счетчиком попыток
+                return fetchWillInfo(willAddress, retryCount - 1, delayMs * 1.5);
+            }
+            
+            // Возвращаем базовую информацию, когда закончились попытки
+            return {
+                address: willAddress,
+                balance: "Загрузка...",
+                heir: "Загрузка...",
+                transferAmount: "Загрузка...",
+                transferFrequency: "Загрузка..."
+            };
         }
     };
 
@@ -192,6 +211,16 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             }
             
             console.log("Найдено завещаний:", willsList.length);
+            
+            // Если список завещаний пуст, завершаем работу
+            if (willsList.length === 0) {
+                setWills([]);
+                return;
+            }
+            
+            // Добавляем небольшую задержку перед запросом информации о завещаниях,
+            // чтобы дать блокчейну время на обработку транзакций
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
             // Получаем информацию о каждом завещании
             const willsInfo = await Promise.all(

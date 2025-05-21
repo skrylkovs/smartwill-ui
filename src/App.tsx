@@ -47,6 +47,7 @@ function App() {
     const [factoryAddress, setFactoryAddress] = useState<string>("");
     const [network, setNetwork] = useState<{ chainId: number; name: string } | null>(null);
     const [isLoadingFactory, setIsLoadingFactory] = useState(false);
+    const [isDeployingFactory, setIsDeployingFactory] = useState(false);
     const myWillsRef = useRef<any>(null);
     const toast = useToast();
 
@@ -112,6 +113,72 @@ function App() {
     // Обработчик деплоя фабрики
     const handleFactoryDeployed = (address: string) => {
         setFactoryAddress(address);
+    };
+    
+    // Функция для создания новой фабрики
+    const deployFactory = async () => {
+        if (!signer) {
+            console.error("Не подключен кошелек");
+            return;
+        }
+        
+        try {
+            setIsDeployingFactory(true);
+            
+            toast({
+                title: "Автоматическое создание фабрики",
+                description: "Так как существующая фабрика не найдена, создаем новую...",
+                status: "info",
+                duration: 5000
+            });
+            
+            // Создаем фабрику контрактов
+            const factory = new ethers.ContractFactory(
+                factoryAbi.abi,
+                factoryAbi.bytecode,
+                signer
+            );
+            
+            // Деплоим контракт
+            const contract = await factory.deploy();
+            
+            toast({
+                title: "Транзакция отправлена",
+                description: "Ожидание подтверждения...",
+                status: "info",
+                duration: 5000
+            });
+            
+            // Ждем завершения деплоя
+            await contract.waitForDeployment();
+            
+            // Получаем адрес нового контракта
+            const contractAddress = await contract.getAddress();
+            
+            // Сохраняем адрес в localStorage
+            localStorage.setItem("factoryAddress", contractAddress);
+            
+            toast({
+                title: "Фабрика развернута",
+                description: `Адрес фабрики: ${contractAddress}`,
+                status: "success",
+                duration: 5000
+            });
+            
+            // Устанавливаем адрес фабрики
+            setFactoryAddress(contractAddress);
+            
+        } catch (err: any) {
+            console.error("Ошибка при создании фабрики:", err);
+            toast({
+                title: "Ошибка создания фабрики",
+                description: err.message || "Произошла ошибка при создании фабрики",
+                status: "error",
+                duration: 5000
+            });
+        } finally {
+            setIsDeployingFactory(false);
+        }
     };
     
     // Функция для получения транзакций пользователя через Arbiscan API
@@ -181,12 +248,8 @@ function App() {
             );
             
             if (contractCreations.length === 0) {
-                toast({
-                    title: "Фабрики не найдены",
-                    description: "С вашего адреса не было создано контрактов",
-                    status: "warning",
-                    duration: 5000
-                });
+                console.log("С вашего адреса не было создано контрактов, создаем новую фабрику");
+                await deployFactory();
                 return;
             }
             
@@ -215,12 +278,8 @@ function App() {
             }
             
             // Если ни один из контрактов не является фабрикой
-            toast({
-                title: "Фабрика не найдена",
-                description: "Среди созданных контрактов не найдено фабрик SmartWillFactory",
-                status: "warning",
-                duration: 5000
-            });
+            console.log("Среди созданных контрактов не найдено фабрик SmartWillFactory, создаем новую");
+            await deployFactory();
             
         } catch (err: any) {
             console.error("Ошибка при поиске фабрики:", err);
@@ -230,6 +289,14 @@ function App() {
                 status: "error",
                 duration: 5000
             });
+            
+            // При ошибке поиска также пытаемся создать новую фабрику
+            try {
+                console.log("Пытаемся создать новую фабрику после ошибки поиска");
+                await deployFactory();
+            } catch (deployErr) {
+                console.error("Не удалось создать фабрику после ошибки поиска:", deployErr);
+            }
         } finally {
             setIsLoadingFactory(false);
         }
@@ -268,18 +335,23 @@ function App() {
                         
                         {!factoryAddress ? (
                             <Box>
-                                <Text mb={3}>Необходимо развернуть фабрику контрактов или найти существующую</Text>
+                                <Text mb={3}>Выполняется поиск или создание фабрики контрактов...</Text>
                                 <VStack spacing={3} align="stretch">
                                     {isLoadingFactory ? (
                                         <Alert status="info" borderRadius="md">
                                             <AlertIcon />
                                             <AlertDescription>Выполняется поиск вашей фабрики SmartWillFactory...</AlertDescription>
                                         </Alert>
+                                    ) : isDeployingFactory ? (
+                                        <Alert status="info" borderRadius="md">
+                                            <AlertIcon />
+                                            <AlertDescription>Выполняется создание новой фабрики...</AlertDescription>
+                                        </Alert>
                                     ) : (
-                                        <DeployFactoryButton 
-                                            signer={signer!} 
-                                            onFactoryDeployed={handleFactoryDeployed} 
-                                        />
+                                        <Alert status="warning" borderRadius="md">
+                                            <AlertIcon />
+                                            <AlertDescription>Не удалось найти или создать фабрику автоматически. Попробуйте обновить страницу.</AlertDescription>
+                                        </Alert>
                                     )}
                                 </VStack>
                             </Box>
