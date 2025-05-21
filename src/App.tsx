@@ -60,6 +60,87 @@ function App() {
         }
     }, []);
     
+    // Функция для подключения к кошельку
+    const connect = async () => {
+        if (!window.ethereum) return alert("Установите MetaMask");
+        const web3Provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await web3Provider.getSigner();
+        const address = await signer.getAddress();
+        setProvider(web3Provider);
+        setSigner(signer);
+        setAccount(address);
+    };
+    
+    // Автоматически подключаемся к кошельку при загрузке страницы
+    useEffect(() => {
+        const autoConnect = async () => {
+            // Проверяем, доступен ли MetaMask
+            if (!window.ethereum) {
+                console.log("MetaMask не установлен");
+                return;
+            }
+            
+            try {
+                // Проверяем, есть ли уже подключенные аккаунты
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                
+                if (accounts && accounts.length > 0) {
+                    console.log("Автоматическое подключение к MetaMask");
+                    connect();
+                } else {
+                    console.log("Нет подключенных аккаунтов");
+                }
+            } catch (error) {
+                console.error("Ошибка при автоматическом подключении:", error);
+            }
+        };
+        
+        autoConnect();
+        
+        // Добавляем обработчики событий MetaMask
+        const setupEventListeners = () => {
+            if (!window.ethereum) return;
+            
+            // Обработка события смены аккаунта
+            window.ethereum.on('accountsChanged', (accounts: string[]) => {
+                if (accounts.length === 0) {
+                    // Пользователь отключил кошелек
+                    console.log("Кошелек отключен");
+                    setAccount("");
+                    setSigner(null);
+                    setProvider(null);
+                } else {
+                    // Пользователь сменил аккаунт
+                    console.log("Аккаунт изменен на:", accounts[0]);
+                    connect();
+                }
+            });
+            
+            // Обработка события смены сети
+            window.ethereum.on('chainChanged', () => {
+                console.log("Сеть изменена, обновляем подключение");
+                connect();
+            });
+            
+            // Обработка события отключения
+            window.ethereum.on('disconnect', () => {
+                console.log("Кошелек отключен");
+                setAccount("");
+                setSigner(null);
+                setProvider(null);
+            });
+        };
+        
+        setupEventListeners();
+        
+        // Очистка обработчиков при размонтировании компонента
+        return () => {
+            if (window.ethereum) {
+                window.ethereum.removeAllListeners();
+            }
+        };
+    }, []);
+    
     // Проверяем сеть при подключении
     useEffect(() => {
         const checkNetwork = async () => {
@@ -86,16 +167,6 @@ function App() {
         }
     }, [account, signer, factoryAddress]);
 
-    const connect = async () => {
-        if (!window.ethereum) return alert("Установите MetaMask");
-        const web3Provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await web3Provider.getSigner();
-        const address = await signer.getAddress();
-        setProvider(web3Provider);
-        setSigner(signer);
-        setAccount(address);
-    };
-    
     // Обработчик события создания завещания
     const handleWillCreated = (willAddress: string) => {
         // Переключаемся на вкладку "Мои завещания"
