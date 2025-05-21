@@ -76,6 +76,14 @@ function App() {
         
         checkNetwork();
     }, [provider]);
+    
+    // Автоматический поиск фабрики при подключении кошелька
+    useEffect(() => {
+        // Если есть адрес кошелька и нет адреса фабрики, запускаем поиск
+        if (account && signer && !factoryAddress) {
+            findLatestFactory();
+        }
+    }, [account, signer, factoryAddress]);
 
     const connect = async () => {
         if (!window.ethereum) return alert("Установите MetaMask");
@@ -153,23 +161,13 @@ function App() {
     // Функция для получения последней фабрики по адресу кошелька через Arbiscan API
     const findLatestFactory = async () => {
         if (!signer || !account) {
-            toast({
-                title: "Ошибка",
-                description: "Не подключен кошелек",
-                status: "error",
-                duration: 5000
-            });
+            console.log("Не подключен кошелек, поиск фабрики невозможен");
             return;
         }
         
         try {
             setIsLoadingFactory(true);
-            toast({
-                title: "Поиск фабрики",
-                description: "Ищем вашу последнюю фабрику SmartWillFactory через Arbiscan...",
-                status: "info",
-                duration: 3000
-            });
+            console.log("Ищем вашу последнюю фабрику SmartWillFactory через Arbiscan...");
             
             // Получаем все транзакции пользователя
             const transactions = await getTransactionsFromArbiscan(account);
@@ -272,18 +270,17 @@ function App() {
                             <Box>
                                 <Text mb={3}>Необходимо развернуть фабрику контрактов или найти существующую</Text>
                                 <VStack spacing={3} align="stretch">
-                                    <DeployFactoryButton 
-                                        signer={signer!} 
-                                        onFactoryDeployed={handleFactoryDeployed} 
-                                    />
-                                    <Button 
-                                        colorScheme="teal" 
-                                        onClick={findLatestFactory}
-                                        isLoading={isLoadingFactory}
-                                        loadingText="Поиск фабрики..."
-                                    >
-                                        Получить последнюю фабрику SmartWillFactory
-                                    </Button>
+                                    {isLoadingFactory ? (
+                                        <Alert status="info" borderRadius="md">
+                                            <AlertIcon />
+                                            <AlertDescription>Выполняется поиск вашей фабрики SmartWillFactory...</AlertDescription>
+                                        </Alert>
+                                    ) : (
+                                        <DeployFactoryButton 
+                                            signer={signer!} 
+                                            onFactoryDeployed={handleFactoryDeployed} 
+                                        />
+                                    )}
                                 </VStack>
                             </Box>
                         ) : (
