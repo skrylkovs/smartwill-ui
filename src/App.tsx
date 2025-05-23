@@ -184,6 +184,18 @@ function App() {
     // Обработчик деплоя фабрики
     const handleFactoryDeployed = (address: string) => {
         setFactoryAddress(address);
+        toast({
+            title: "Фабрика контрактов изменена",
+            description: "Адрес новой фабрики успешно сохранен. Все завещания будут создаваться через эту фабрику.",
+            status: "success",
+            duration: 5000
+        });
+        
+        // Очищаем старые данные
+        if (myWillsRef.current && typeof myWillsRef.current.loadWills === 'function') {
+            // Перезагружаем список завещаний, если компонент MyWills загружен
+            myWillsRef.current.loadWills();
+        }
     };
     
     // Функция для создания новой фабрики
@@ -419,16 +431,28 @@ function App() {
                                             <AlertDescription>Выполняется создание новой фабрики...</AlertDescription>
                                         </Alert>
                                     ) : (
-                                        <Alert status="warning" borderRadius="md">
-                                            <AlertIcon />
-                                            <AlertDescription>Не удалось найти или создать фабрику автоматически. Попробуйте обновить страницу.</AlertDescription>
-                                        </Alert>
+                                        <>
+                                            <Alert status="warning" borderRadius="md">
+                                                <AlertIcon />
+                                                <AlertDescription>Не удалось найти или создать фабрику автоматически.</AlertDescription>
+                                            </Alert>
+                                            <DeployFactoryButton 
+                                                signer={signer!} 
+                                                onFactoryDeployed={handleFactoryDeployed} 
+                                            />
+                                        </>
                                     )}
                                 </VStack>
                             </Box>
                         ) : (
                             <>
-                                <Text>Адрес фабрики: {factoryAddress}</Text>
+                                <HStack justifyContent="space-between" align="center" w="100%">
+                                    <Text>Адрес фабрики: {factoryAddress}</Text>
+                                    <DeployFactoryButton 
+                                        signer={signer!} 
+                                        onFactoryDeployed={handleFactoryDeployed} 
+                                    />
+                                </HStack>
                                 <HStack spacing={4}>
                                     <Button onClick={() => setShowMyWills(false)} colorScheme={!showMyWills ? "blue" : "gray"}>
                                         Создать завещание

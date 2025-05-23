@@ -28,7 +28,7 @@ export default function DeployFactoryButton({ signer, onFactoryDeployed }: Props
       
       toast({
         title: "Транзакция отправлена",
-        description: "Ожидание подтверждения...",
+        description: "Ожидание подтверждения деплоя новой фабрики...",
         status: "info",
         duration: 5000
       });
@@ -43,8 +43,8 @@ export default function DeployFactoryButton({ signer, onFactoryDeployed }: Props
       localStorage.setItem("factoryAddress", contractAddress);
       
       toast({
-        title: "Фабрика развернута",
-        description: `Адрес фабрики: ${contractAddress}`,
+        title: "Новая фабрика развернута",
+        description: `Адрес новой фабрики: ${contractAddress}`,
         status: "success",
         duration: 5000
       });
@@ -69,8 +69,9 @@ export default function DeployFactoryButton({ signer, onFactoryDeployed }: Props
       onClick={deployFactory}
       isLoading={loading}
       loadingText="Деплой..."
+      size="sm"
     >
-      Развернуть фабрику контрактов
+      Создать новую фабрику
     </Button>
   );
 } 
