@@ -12,7 +12,8 @@ import {
     AlertIcon,
     AlertTitle,
     AlertDescription,
-    useToast
+    useToast,
+    Flex
 } from "@chakra-ui/react";
 import CreateWillForm from "./components/CreateWillForm";
 import MyWills from "./components/MyWills";
@@ -390,9 +391,21 @@ function App() {
 
     return (
         <Container py={6} maxW="container.lg">
+            <Flex justifyContent="space-between" alignItems="center" mb={6} pb={4} borderBottomWidth="1px">
+                <HStack spacing={2}>
+                    <Heading size="md">💼 SmartWill</Heading>
+                </HStack>
+                {account && (
+                    <Box textAlign="right">
+                        <Text fontSize="sm">Кошелек: {account}</Text>
+                        {factoryAddress && (
+                            <Text fontSize="sm">Адрес фабрики: {factoryAddress}</Text>
+                        )}
+                    </Box>
+                )}
+            </Flex>
+            
             <VStack spacing={6}>
-                <Heading>💼 SmartWill</Heading>
-                
                 <Alert status="info" borderRadius="md">
                     <AlertIcon />
                     <AlertDescription>
@@ -404,7 +417,6 @@ function App() {
                     <Button onClick={connect}>Подключить кошелек</Button>
                 ) : (
                     <>
-                        <Text>Кошелек: {account}</Text>
                         {network && !isCorrectNetwork && (
                             <Alert status="warning" borderRadius="md">
                                 <AlertIcon />
@@ -448,15 +460,6 @@ function App() {
                             </Box>
                         ) : (
                             <>
-                                <HStack justifyContent="space-between" align="center" w="100%">
-                                    <Text>Адрес фабрики: {factoryAddress}</Text>
-                                    {/* Кнопка скрыта
-                                    <DeployFactoryButton 
-                                        signer={signer!} 
-                                        onFactoryDeployed={handleFactoryDeployed} 
-                                    />
-                                    */}
-                                </HStack>
                                 <HStack spacing={4}>
                                     <Button onClick={() => setShowMyWills(false)} colorScheme={!showMyWills ? "blue" : "gray"}>
                                         Создать завещание
