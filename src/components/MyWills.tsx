@@ -321,14 +321,14 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                             {wills.map((will) => (
                                 <ListItem key={will.address} p={4} border="1px" borderColor="gray.200" borderRadius="md">
                                     <Box>
-                                        <Text><strong>Адрес контракта:</strong> {will.address}</Text>
-                                        <Text><strong>Баланс:</strong> {will.balance} ETH</Text>
-                                        <Text><strong>Кошелек наследника:</strong> {will.heir}</Text>
                                         <Text><strong>ФИО наследника:</strong> {will.heirName}</Text>
                                         <Text><strong>Роль наследника:</strong> {will.heirRole}</Text>
+                                        <Text><strong>Кошелек наследника:</strong> {will.heir}</Text>
+                                        <Text><strong>Баланс:</strong> {will.balance} ETH</Text>
                                         <Text><strong>Сумма регулярного перевода:</strong> {will.transferAmount} ETH</Text>
                                         <Text><strong>Частота выплат:</strong> {will.transferFrequency} сек.</Text>
                                         <Text><strong>Лимит:</strong> {will.limit} ETH</Text>
+                                        <Text color="blue.500"><strong>Адрес контракта:</strong> {will.address}</Text>
                                     </Box>
                                 </ListItem>
                             ))}
