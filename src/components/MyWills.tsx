@@ -14,7 +14,8 @@ import {
     useToast,
     Divider,
     Center,
-    Icon
+    Icon,
+    Grid
 } from "@chakra-ui/react";
 import { RepeatIcon } from "@chakra-ui/icons";
 import SmartWillAbi from "../contracts/SmartWill.json";
@@ -44,6 +45,19 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const [loading, setLoading] = useState(false);
     const [pingLoading, setPingLoading] = useState(false);
     const toast = useToast();
+
+    // Функция для форматирования времени в секундах в читаемый формат
+    const formatTime = (seconds: number): string => {
+        if (seconds < 60) return `${seconds} сек.`;
+        if (seconds < 3600) {
+            const minutes = Math.floor(seconds / 60);
+            return `${minutes} мин.`;
+        }
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        if (minutes === 0) return `${hours} ч.`;
+        return `${hours} ч. ${minutes} мин.`;
+    };
 
     // Получение информации о завещании
     const fetchWillInfo = async (willAddress: string, retryCount = 3, delayMs = 1000) => {
@@ -159,13 +173,22 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     // Отправляет пинг в фабрику
     const handlePingAll = async () => {
         try {
+            // Сначала проверяем сеть
+            const provider = signer.provider as ethers.BrowserProvider;
+            const network = await provider.getNetwork();
+            const chainId = Number(network.chainId);
+
+            // ID сети Arbitrum Sepolia: 421614
+            if (chainId !== 421614) {
+                throw new Error("Пожалуйста, переключитесь на сеть Arbitrum Sepolia в вашем кошельке");
+            }
+
             setPingLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
-            
+
             // Отправляем один пинг в фабрику
             const tx = await factory.ping();
-            await tx.wait();
-            
+
             toast({
                 title: "Успешно!",
                 description: `Вы подтвердили, что живы.`,
@@ -173,7 +196,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 duration: 5000,
                 isClosable: true,
             });
-            
+
             // Обновляем информацию о последнем пинге
             await fetchLastPing();
 
@@ -294,70 +317,113 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
 
     return (
         <Box w="100%">
-            <VStack spacing={4} align="stretch">
-                <HStack justifyContent="space-between">
-                    <Heading size="md">Мои завещания</Heading>
-                    <Button 
-                        size="sm" 
-                        onClick={refreshWills} 
-                        leftIcon={<Icon as={RepeatIcon} />}
-                        isLoading={loading}
-                    >
-                        Обновить
-                    </Button>
-                </HStack>
-                {loading ? (
-                    <Center p={10}>
-                        <VStack>
-                            <Spinner size="xl" />
-                            <Text mt={2}>Загрузка завещаний...</Text>
-                        </VStack>
-                    </Center>
-                ) : wills.length === 0 ? (
-                    <Text>У вас пока нет завещаний</Text>
-                ) : (
-                    <>
-                        <List spacing={3}>
-                            {wills.map((will) => (
-                                <ListItem key={will.address} p={4} border="1px" borderColor="gray.200" borderRadius="md">
-                                    <Box>
-                                        <Text><strong>ФИО наследника:</strong> {will.heirName}</Text>
-                                        <Text><strong>Роль наследника:</strong> {will.heirRole}</Text>
-                                        <Text><strong>Кошелек наследника:</strong> {will.heir}</Text>
-                                        <Text><strong>Баланс:</strong> {will.balance} ETH</Text>
-                                        <Text><strong>Сумма регулярного перевода:</strong> {will.transferAmount} ETH</Text>
-                                        <Text><strong>Частота выплат:</strong> {will.transferFrequency} сек.</Text>
-                                        <Text><strong>Лимит:</strong> {will.limit} ETH</Text>
-                                        <Text color="blue.500"><strong>Адрес контракта:</strong> {will.address}</Text>
-                                    </Box>
-                                </ListItem>
-                            ))}
-                        </List>
-                        
-                        <Box mt={6} p={4} borderWidth={1} borderRadius="md" borderColor="blue.200" bg="blue.50">
-                            <VStack spacing={4} align="center">
-                                <Button 
-                                    onClick={handlePingAll}
-                                    colorScheme="blue"
-                                    size="lg"
-                                    isLoading={pingLoading}
-                                    loadingText="Отправка..."
-                                    width="100%"
-                                >
-                                    Подтвердить, что я жив
-                                </Button>
-                                
-                                <Divider />
-                                
-                                <Box textAlign="center">
-                                    <Text fontSize="sm" color="gray.600">Последнее подтверждение:</Text>
-                                    <Text fontWeight="bold">{lastPing}</Text>
+            <HStack justifyContent="space-between" mb={6}>
+                <Heading size="md" fontWeight="semibold">Мои завещания</Heading>
+                <Button 
+                    size="sm" 
+                    onClick={refreshWills} 
+                    leftIcon={<Icon as={RepeatIcon} />}
+                    isLoading={loading}
+                    colorScheme="purple"
+                    variant="outline"
+                    _hover={{ bg: 'purple.50' }}
+                >
+                    Обновить
+                </Button>
+            </HStack>
+            {loading ? (
+                <Center p={10}>
+                    <VStack>
+                        <Spinner size="xl" color="purple.500" thickness="3px" speed="0.8s" />
+                        <Text mt={4} color="gray.600">Загрузка завещаний...</Text>
+                    </VStack>
+                </Center>
+            ) : wills.length === 0 ? (
+                <Box py={10} textAlign="center">
+                    <VStack spacing={4}>
+                        <Icon as={RepeatIcon} w={12} h={12} color="gray.300" />
+                        <Text fontSize="lg" color="gray.500" fontWeight="medium">У вас пока нет завещаний</Text>
+                        <Text fontSize="md" color="gray.500">Создайте новое завещание, чтобы начать</Text>
+                    </VStack>
+                </Box>
+            ) : (
+                <>
+                    <List spacing={4}>
+                        {wills.map((will) => (
+                            <ListItem 
+                                key={will.address} 
+                                p={5} 
+                                borderWidth="1px" 
+                                borderColor="gray.200" 
+                                borderRadius="lg" 
+                                boxShadow="sm"
+                                transition="all 0.2s"
+                                _hover={{ boxShadow: 'md', borderColor: 'purple.200' }}
+                                bg="white"
+                            >
+                                <Box>
+                                    <Heading size="sm" fontWeight="semibold" mb={3} color="purple.700">
+                                        {will.heirName}
+                                    </Heading>
+                                    <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={4}>
+                                        <VStack align="start" spacing={2}>
+                                            <Text fontSize="sm"><strong>Роль наследника:</strong> {will.heirRole}</Text>
+                                            <Text fontSize="sm"><strong>Кошелек наследника:</strong> {will.heir}</Text>
+                                            <Text fontSize="sm"><strong>Баланс:</strong> {will.balance} ETH</Text>
+                                        </VStack>
+                                        <VStack align="start" spacing={2}>
+                                            <Text fontSize="sm"><strong>Сумма регулярного перевода:</strong> {will.transferAmount} ETH</Text>
+                                            <Text fontSize="sm"><strong>Частота выплат:</strong> {
+                                                Number(will.transferFrequency) < 60 
+                                                    ? `${will.transferFrequency} сек.` 
+                                                    : `${Math.floor(Number(will.transferFrequency) / 60)} мин.`
+                                            }</Text>
+                                            <Text fontSize="sm"><strong>Лимит:</strong> {will.limit} ETH</Text>
+                                        </VStack>
+                                    </Grid>
+                                    <Text color="blue.500" fontSize="sm" mt={4} opacity={0.8}>
+                                        <strong>Адрес контракта:</strong> {will.address}
+                                    </Text>
                                 </Box>
-                            </VStack>
-                        </Box>
-                    </>
-                )}
-            </VStack>
+                            </ListItem>
+                        ))}
+                    </List>
+                    
+                    <Box 
+                        mt={8} 
+                        p={6} 
+                        borderRadius="lg" 
+                        borderWidth="1px"
+                        borderColor="blue.200" 
+                        bg="blue.50"
+                        boxShadow="md"
+                    >
+                        <VStack spacing={5} align="center">
+                            <Button 
+                                onClick={handlePingAll}
+                                colorScheme="blue"
+                                size="lg"
+                                isLoading={pingLoading}
+                                loadingText="Отправка..."
+                                width="100%"
+                                height="60px"
+                                boxShadow="sm"
+                                _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
+                                transition="all 0.2s"
+                            >
+                                Подтвердить, что я жив
+                            </Button>
+                            
+                            <Divider />
+                            
+                            <Box textAlign="center">
+                                <Text fontSize="sm" color="gray.600" mb={1}>Последнее подтверждение:</Text>
+                                <Text fontWeight="bold" fontSize="md">{lastPing}</Text>
+                            </Box>
+                        </VStack>
+                    </Box>
+                </>
+            )}
         </Box>
     );
 });

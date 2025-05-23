@@ -390,103 +390,163 @@ function App() {
     const isCorrectNetwork = network && network.chainId === 421614;
 
     return (
-        <Container py={6} maxW="container.lg">
-            <Flex justifyContent="space-between" alignItems="center" mb={6} pb={4} borderBottomWidth="1px">
-                <HStack spacing={2}>
-                    <Heading size="md">💼 SmartWill</Heading>
-                </HStack>
-                {account && (
-                    <Box textAlign="right">
-                        <Text fontSize="sm">Кошелек: {account}</Text>
-                        {factoryAddress && (
-                            <Text fontSize="sm">Адрес фабрики: {factoryAddress}</Text>
+        <Box bg="gray.50" minH="100vh">
+            <Box 
+                bg="linear-gradient(135deg, #4776E6 0%, #8E54E9 100%)" 
+                py={4} 
+                px={6}
+                boxShadow="md"
+            >
+                <Container maxW="container.lg">
+                    <Flex justifyContent="space-between" alignItems="center">
+                        <HStack spacing={2}>
+                            <Heading size="md" color="white">💼 SmartWill</Heading>
+                        </HStack>
+                        {account && (
+                            <Box textAlign="right">
+                                <Text fontSize="sm" color="white" opacity="0.9">Кошелек: {account}</Text>
+                                {factoryAddress && (
+                                    <Text fontSize="sm" color="white" opacity="0.8">Адрес фабрики: {factoryAddress}</Text>
+                                )}
+                            </Box>
                         )}
-                    </Box>
-                )}
-            </Flex>
+                    </Flex>
+                </Container>
+            </Box>
             
-            <VStack spacing={6}>
-                <Alert status="info" borderRadius="md">
-                    <AlertIcon />
-                    <AlertDescription>
-                        Контракт работает в сети <strong>Arbitrum Sepolia</strong>. Убедитесь, что ваш кошелек подключен к этой сети.
-                    </AlertDescription>
-                </Alert>
-                
-                {!account ? (
-                    <Button onClick={connect}>Подключить кошелек</Button>
-                ) : (
-                    <>
-                        {network && !isCorrectNetwork && (
-                            <Alert status="warning" borderRadius="md">
-                                <AlertIcon />
+            <Container py={8} maxW="container.lg">
+                <VStack spacing={8}>
+                    {!isCorrectNetwork && network && (
+                        <Alert status="warning" borderRadius="lg" boxShadow="sm" variant="left-accent">
+                            <AlertIcon />
+                            <Box>
                                 <AlertTitle>Неверная сеть!</AlertTitle>
                                 <AlertDescription>
                                     Вы подключены к сети {network.name || `Chain ID: ${network.chainId}`}. 
                                     Пожалуйста, переключитесь на Arbitrum Sepolia в вашем кошельке.
                                 </AlertDescription>
-                            </Alert>
-                        )}
-                        
-                        {!factoryAddress ? (
-                            <Box>
-                                <Text mb={3}>Выполняется поиск или создание фабрики контрактов...</Text>
-                                <VStack spacing={3} align="stretch">
-                                    {isLoadingFactory ? (
-                                        <Alert status="info" borderRadius="md">
-                                            <AlertIcon />
-                                            <AlertDescription>Выполняется поиск вашей фабрики SmartWillFactory...</AlertDescription>
-                                        </Alert>
-                                    ) : isDeployingFactory ? (
-                                        <Alert status="info" borderRadius="md">
-                                            <AlertIcon />
-                                            <AlertDescription>Выполняется создание новой фабрики...</AlertDescription>
-                                        </Alert>
-                                    ) : (
-                                        <>
-                                            <Alert status="warning" borderRadius="md">
-                                                <AlertIcon />
-                                                <AlertDescription>Не удалось найти или создать фабрику автоматически.</AlertDescription>
-                                            </Alert>
-                                            {/* Кнопка скрыта
-                                            <DeployFactoryButton 
-                                                signer={signer!} 
-                                                onFactoryDeployed={handleFactoryDeployed} 
-                                            />
-                                            */}
-                                        </>
-                                    )}
-                                </VStack>
                             </Box>
-                        ) : (
-                            <>
-                                <HStack spacing={4}>
-                                    <Button onClick={() => setShowMyWills(false)} colorScheme={!showMyWills ? "blue" : "gray"}>
-                                        Создать завещание
-                                    </Button>
-                                    <Button onClick={() => setShowMyWills(true)} colorScheme={showMyWills ? "blue" : "gray"}>
-                                        Мои завещания
-                                    </Button>
-                                </HStack>
-                                {showMyWills ? (
-                                    <MyWills 
-                                        signer={signer!} 
-                                        ref={myWillsRef}
-                                        factoryAddress={factoryAddress}
-                                    />
-                                ) : (
-                                    <CreateWillForm 
-                                        signer={signer!} 
-                                        onWillCreated={handleWillCreated}
-                                        factoryAddress={factoryAddress} 
-                                    />
-                                )}
-                            </>
-                        )}
-                    </>
-                )}
-            </VStack>
-        </Container>
+                        </Alert>
+                    )}
+                    
+                    {!account ? (
+                        <Box textAlign="center" py={10}>
+                            <VStack spacing={6}>
+                                <Heading size="xl">Управляйте своими цифровыми активами</Heading>
+                                <Text fontSize="lg" color="gray.600" maxW="600px">
+                                    SmartWill помогает создавать умные завещания на блокчейне, 
+                                    обеспечивая безопасную передачу ваших криптоактивов наследникам.
+                                </Text>
+                                <Button 
+                                    onClick={connect} 
+                                    size="lg" 
+                                    colorScheme="purple" 
+                                    px={8}
+                                    boxShadow="md"
+                                    _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
+                                    transition="all 0.2s"
+                                >
+                                    Подключить кошелек
+                                </Button>
+                            </VStack>
+                        </Box>
+                    ) : (
+                        <>
+                            {!factoryAddress ? (
+                                <Box 
+                                    w="100%" 
+                                    p={6} 
+                                    borderRadius="lg" 
+                                    bg="white" 
+                                    boxShadow="base"
+                                >
+                                    <Text mb={4} fontWeight="medium">Настройка вашей фабрики контрактов...</Text>
+                                    <VStack spacing={4} align="stretch">
+                                        {isLoadingFactory ? (
+                                            <Alert status="info" borderRadius="md" variant="left-accent">
+                                                <AlertIcon />
+                                                <AlertDescription>Выполняется поиск вашей фабрики SmartWillFactory...</AlertDescription>
+                                            </Alert>
+                                        ) : isDeployingFactory ? (
+                                            <Alert status="info" borderRadius="md" variant="left-accent">
+                                                <AlertIcon />
+                                                <AlertDescription>Выполняется создание новой фабрики...</AlertDescription>
+                                            </Alert>
+                                        ) : (
+                                            <>
+                                                <Alert status="warning" borderRadius="md" variant="left-accent">
+                                                    <AlertIcon />
+                                                    <AlertDescription>Не удалось найти или создать фабрику автоматически.</AlertDescription>
+                                                </Alert>
+                                                {/* Кнопка скрыта */}
+                                            </>
+                                        )}
+                                    </VStack>
+                                </Box>
+                            ) : (
+                                <>
+                                    <Box 
+                                        bg="white" 
+                                        borderRadius="lg" 
+                                        p={4} 
+                                        boxShadow="base"
+                                        width="100%"
+                                        mb={2}
+                                    >
+                                        <HStack spacing={4}>
+                                            <Button 
+                                                onClick={() => setShowMyWills(false)} 
+                                                colorScheme={!showMyWills ? "purple" : "gray"}
+                                                variant={!showMyWills ? "solid" : "outline"}
+                                                flex={1}
+                                                size="lg"
+                                                _hover={{ transform: !showMyWills ? "none" : "translateY(-2px)" }}
+                                                transition="all 0.2s"
+                                            >
+                                                Создать завещание
+                                            </Button>
+                                            <Button 
+                                                onClick={() => setShowMyWills(true)} 
+                                                colorScheme={showMyWills ? "purple" : "gray"}
+                                                variant={showMyWills ? "solid" : "outline"}
+                                                flex={1}
+                                                size="lg"
+                                                _hover={{ transform: showMyWills ? "none" : "translateY(-2px)" }}
+                                                transition="all 0.2s"
+                                            >
+                                                Мои завещания
+                                            </Button>
+                                        </HStack>
+                                    </Box>
+                                    
+                                    <Box 
+                                        p={6} 
+                                        borderRadius="lg" 
+                                        bg="white" 
+                                        boxShadow="base"
+                                        width="100%"
+                                    >
+                                        {showMyWills ? (
+                                            <MyWills 
+                                                signer={signer!} 
+                                                ref={myWillsRef}
+                                                factoryAddress={factoryAddress}
+                                            />
+                                        ) : (
+                                            <CreateWillForm 
+                                                signer={signer!} 
+                                                onWillCreated={handleWillCreated}
+                                                factoryAddress={factoryAddress} 
+                                            />
+                                        )}
+                                    </Box>
+                                </>
+                            )}
+                        </>
+                    )}
+                </VStack>
+            </Container>
+        </Box>
     );
 }
 

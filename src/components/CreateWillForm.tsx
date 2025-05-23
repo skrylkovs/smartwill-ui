@@ -11,7 +11,9 @@ import {
     Alert,
     AlertIcon,
     AlertTitle,
-    AlertDescription
+    AlertDescription,
+    Grid,
+    Heading
 } from "@chakra-ui/react";
 import { ethers } from "ethers";
 import factoryAbi from "../contracts/SmartWillFactory.json";
@@ -155,56 +157,149 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
     };
 
     return (
-        <Box p={4} borderWidth={1} borderRadius="md">
+        <Box>
             {networkError && (
-                <Alert status="error" mb={4} borderRadius="md">
+                <Alert status="error" mb={6} borderRadius="lg" variant="left-accent" boxShadow="sm">
                     <AlertIcon />
-                    <AlertTitle>Ошибка сети!</AlertTitle>
-                    <AlertDescription>{networkError}</AlertDescription>
+                    <Box>
+                        <AlertTitle>Ошибка сети!</AlertTitle>
+                        <AlertDescription>{networkError}</AlertDescription>
+                    </Box>
                 </Alert>
             )}
-            <VStack spacing={3}>
+            
+            <Box mb={8}>
+                <Heading size="md" fontWeight="semibold" mb={4}>Создание нового завещания</Heading>
+                <Text color="gray.600" fontSize="md">
+                    Заполните данные для создания умного завещания на блокчейне
+                </Text>
+            </Box>
+            
+            <Grid 
+                templateColumns={{ base: "1fr", md: "1fr 1fr" }} 
+                gap={6}
+            >
                 <FormControl>
-                    <FormLabel>Ф.И.О. наследника</FormLabel>
-                    <Input name="heirName" value={form.heirName} onChange={handleChange} />
+                    <FormLabel fontWeight="medium">Ф.И.О. наследника</FormLabel>
+                    <Input 
+                        name="heirName" 
+                        value={form.heirName} 
+                        onChange={handleChange} 
+                        bg="white"
+                        borderColor="gray.300"
+                        _hover={{ borderColor: "purple.300" }}
+                        _focus={{ borderColor: "purple.500", boxShadow: "0 0 0 1px #8E54E9" }}
+                        placeholder="Иванов Иван Иванович"
+                    />
                 </FormControl>
+                
                 <FormControl>
-                    <FormLabel>Роль наследника</FormLabel>
-                    <Input name="heirRole" value={form.heirRole} onChange={handleChange} />
+                    <FormLabel fontWeight="medium">Роль наследника</FormLabel>
+                    <Input 
+                        name="heirRole" 
+                        value={form.heirRole} 
+                        onChange={handleChange} 
+                        bg="white"
+                        borderColor="gray.300"
+                        _hover={{ borderColor: "purple.300" }}
+                        _focus={{ borderColor: "purple.500", boxShadow: "0 0 0 1px #8E54E9" }}
+                        placeholder="Сын"
+                    />
                 </FormControl>
+                
                 <FormControl>
-                    <FormLabel>Кошелек наследника</FormLabel>
-                    <Input name="heir" value={form.heir} onChange={handleChange} />
+                    <FormLabel fontWeight="medium">Кошелек наследника</FormLabel>
+                    <Input 
+                        name="heir" 
+                        value={form.heir} 
+                        onChange={handleChange} 
+                        bg="white"
+                        borderColor="gray.300"
+                        _hover={{ borderColor: "purple.300" }}
+                        _focus={{ borderColor: "purple.500", boxShadow: "0 0 0 1px #8E54E9" }}
+                        placeholder="0x..."
+                        fontFamily="monospace"
+                    />
                 </FormControl>
+                
                 <FormControl>
-                    <FormLabel>Сумма регулярного перевода</FormLabel>
-                    <Input name="transferAmount" value={form.transferAmount} onChange={handleChange} />
+                    <FormLabel fontWeight="medium">Сумма регулярного перевода</FormLabel>
+                    <Input 
+                        name="transferAmount" 
+                        value={form.transferAmount} 
+                        onChange={handleChange} 
+                        bg="white"
+                        borderColor="gray.300"
+                        _hover={{ borderColor: "purple.300" }}
+                        _focus={{ borderColor: "purple.500", boxShadow: "0 0 0 1px #8E54E9" }}
+                        placeholder="0.001"
+                    />
                 </FormControl>
+                
                 <FormControl>
-                    <FormLabel>Частота выплат (секунды)</FormLabel>
-                    <Input name="frequency" value={form.frequency} onChange={handleChange} />
-                    <Text fontSize="xs" color="gray.500">Минимум: 60 секунд (1 минута)</Text>
+                    <FormLabel fontWeight="medium">Частота выплат (секунды)</FormLabel>
+                    <Input 
+                        name="frequency" 
+                        value={form.frequency} 
+                        onChange={handleChange} 
+                        bg="white"
+                        borderColor="gray.300"
+                        _hover={{ borderColor: "purple.300" }}
+                        _focus={{ borderColor: "purple.500", boxShadow: "0 0 0 1px #8E54E9" }}
+                        type="number"
+                    />
+                    <Text fontSize="xs" color="gray.500" mt={1}>Минимум: 60 секунд (1 минута)</Text>
                 </FormControl>
+                
                 <FormControl>
-                    <FormLabel>Период ожидания (секунды)</FormLabel>
-                    <Input name="waitingPeriod" value={form.waitingPeriod} onChange={handleChange} />
-                    <Text fontSize="xs" color="gray.500">Минимум: 120 секунд (2 минуты)</Text>
+                    <FormLabel fontWeight="medium">Период ожидания (секунды)</FormLabel>
+                    <Input 
+                        name="waitingPeriod" 
+                        value={form.waitingPeriod} 
+                        onChange={handleChange} 
+                        bg="white"
+                        borderColor="gray.300"
+                        _hover={{ borderColor: "purple.300" }}
+                        _focus={{ borderColor: "purple.500", boxShadow: "0 0 0 1px #8E54E9" }}
+                        type="number"
+                    />
+                    <Text fontSize="xs" color="gray.500" mt={1}>Минимум: 120 секунд (2 минуты)</Text>
                 </FormControl>
-                <FormControl>
-                    <FormLabel>Лимит</FormLabel>
-                    <Input name="limit" value={form.limit} onChange={handleChange} />
-                    <Text fontSize="xs" color="gray.500">Должен быть не меньше суммы перевода</Text>
+                
+                <FormControl gridColumn={{ md: "span 2" }}>
+                    <FormLabel fontWeight="medium">Лимит</FormLabel>
+                    <Input 
+                        name="limit" 
+                        value={form.limit} 
+                        onChange={handleChange} 
+                        bg="white"
+                        borderColor="gray.300"
+                        _hover={{ borderColor: "purple.300" }}
+                        _focus={{ borderColor: "purple.500", boxShadow: "0 0 0 1px #8E54E9" }}
+                        placeholder="0.005"
+                    />
+                    <Text fontSize="xs" color="gray.500" mt={1}>Должен быть не меньше суммы перевода</Text>
                 </FormControl>
+            </Grid>
+            
+            <Box mt={8} textAlign="center">
                 <Button 
-                    colorScheme="green" 
+                    colorScheme="purple" 
                     onClick={handleSubmit} 
                     isLoading={loading}
                     loadingText="Создание..."
                     isDisabled={!form.heir || !form.heirName || !form.heirRole || !form.transferAmount || !form.limit || !!networkError}
+                    size="lg"
+                    width={{ base: "100%", md: "auto" }}
+                    px={10}
+                    py={6}
+                    boxShadow="md"
+                    _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
+                    transition="all 0.2s"
                 >
                     Создать завещание
                 </Button>
-            </VStack>
+            </Box>
         </Box>
     );
 }
