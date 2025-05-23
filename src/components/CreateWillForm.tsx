@@ -25,10 +25,12 @@ interface Props {
 export default function CreateWillForm({ signer, onWillCreated, factoryAddress }: Props) {
     const [form, setForm] = useState({
         heir: "",
+        heirName: "",
+        heirRole: "",
         transferAmount: "",
         frequency: 180,
         waitingPeriod: 300,
-        deposit: ""
+        limit: ""
     });
     const [loading, setLoading] = useState(false);
     const [networkError, setNetworkError] = useState<string | null>(null);
@@ -86,10 +88,10 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             const waitingPeriod = Math.max(Number(form.waitingPeriod), minWaitingPeriod);
             
             const transferAmountWei = ethers.parseEther(form.transferAmount);
-            const depositWei = ethers.parseEther(form.deposit);
+            const limitWei = ethers.parseEther(form.limit);
             
-            if (depositWei < transferAmountWei) {
-                throw new Error("Депозит должен быть больше или равен сумме перевода");
+            if (limitWei < transferAmountWei) {
+                throw new Error("Лимит должен быть больше или равен сумме перевода");
             }
             
             // Добавляем gas limit для решения проблемы с estimateGas
@@ -97,11 +99,14 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             
             const tx = await factory.createSmartWill(
                 form.heir,
+                form.heirName,
+                form.heirRole,
                 ethers.parseEther(form.transferAmount),
                 frequency,
                 waitingPeriod,
+                limitWei,
                 { 
-                    value: depositWei,
+                    value: limitWei,
                     gasLimit: gasLimit 
                 }
             );
@@ -127,10 +132,12 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                 
                 setForm({
                     heir: "",
+                    heirName: "",
+                    heirRole: "",
                     transferAmount: "",
                     frequency: 180,
                     waitingPeriod: 300,
-                    deposit: ""
+                    limit: ""
                 });
                 
                 onWillCreated(newAddress);
@@ -158,11 +165,19 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             )}
             <VStack spacing={3}>
                 <FormControl>
-                    <FormLabel>Адрес наследника</FormLabel>
+                    <FormLabel>Ф.И.О. наследника</FormLabel>
+                    <Input name="heirName" value={form.heirName} onChange={handleChange} />
+                </FormControl>
+                <FormControl>
+                    <FormLabel>Роль наследника</FormLabel>
+                    <Input name="heirRole" value={form.heirRole} onChange={handleChange} />
+                </FormControl>
+                <FormControl>
+                    <FormLabel>Кошелек наследника</FormLabel>
                     <Input name="heir" value={form.heir} onChange={handleChange} />
                 </FormControl>
                 <FormControl>
-                    <FormLabel>Сумма перевода (ETH)</FormLabel>
+                    <FormLabel>Сумма регулярного перевода</FormLabel>
                     <Input name="transferAmount" value={form.transferAmount} onChange={handleChange} />
                 </FormControl>
                 <FormControl>
@@ -176,8 +191,8 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                     <Text fontSize="xs" color="gray.500">Минимум: 120 секунд (2 минуты)</Text>
                 </FormControl>
                 <FormControl>
-                    <FormLabel>Депозит (ETH)</FormLabel>
-                    <Input name="deposit" value={form.deposit} onChange={handleChange} />
+                    <FormLabel>Лимит</FormLabel>
+                    <Input name="limit" value={form.limit} onChange={handleChange} />
                     <Text fontSize="xs" color="gray.500">Должен быть не меньше суммы перевода</Text>
                 </FormControl>
                 <Button 
@@ -185,7 +200,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                     onClick={handleSubmit} 
                     isLoading={loading}
                     loadingText="Создание..."
-                    isDisabled={!form.heir || !form.transferAmount || !form.deposit || !!networkError}
+                    isDisabled={!form.heir || !form.heirName || !form.heirRole || !form.transferAmount || !form.limit || !!networkError}
                 >
                     Создать завещание
                 </Button>

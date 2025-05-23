@@ -30,8 +30,11 @@ export interface WillInfo {
     address: string;
     balance: string;
     heir: string;
+    heirName: string;
+    heirRole: string;
     transferAmount: string;
     transferFrequency: string;
+    limit: string;
 }
 
 // Изменяем на forwardRef и экспортируем методы через useImperativeHandle
@@ -48,19 +51,25 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
             
             // Получаем основную информацию из контракта завещания
-            const [balance, heir, transferAmount, transferFrequency] = await Promise.all([
+            const [balance, heir, heirName, heirRole, transferAmount, transferFrequency, limit] = await Promise.all([
                 contract.getBalance(),
                 contract.heir(),
+                contract.heirName(),
+                contract.heirRole(),
                 contract.transferAmount(),
-                contract.transferFrequency()
+                contract.transferFrequency(),
+                contract.limit()
             ]);
 
             return {
                 address: willAddress,
                 balance: ethers.formatEther(balance),
                 heir,
+                heirName,
+                heirRole,
                 transferAmount: ethers.formatEther(transferAmount),
-                transferFrequency: transferFrequency.toString()
+                transferFrequency: transferFrequency.toString(),
+                limit: ethers.formatEther(limit)
             };
         } catch (error) {
             console.error(`Ошибка при получении информации о завещании ${willAddress}:`, error);
@@ -81,8 +90,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 address: willAddress,
                 balance: "Загрузка...",
                 heir: "Загрузка...",
+                heirName: "Загрузка...",
+                heirRole: "Загрузка...",
                 transferAmount: "Загрузка...",
-                transferFrequency: "Загрузка..."
+                transferFrequency: "Загрузка...",
+                limit: "Загрузка..."
             };
         }
     };
@@ -311,9 +323,12 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                     <Box>
                                         <Text><strong>Адрес контракта:</strong> {will.address}</Text>
                                         <Text><strong>Баланс:</strong> {will.balance} ETH</Text>
-                                        <Text><strong>Наследник:</strong> {will.heir}</Text>
-                                        <Text><strong>Сумма перевода:</strong> {will.transferAmount} ETH</Text>
-                                        <Text><strong>Частота переводов:</strong> {will.transferFrequency} сек.</Text>
+                                        <Text><strong>Кошелек наследника:</strong> {will.heir}</Text>
+                                        <Text><strong>ФИО наследника:</strong> {will.heirName}</Text>
+                                        <Text><strong>Роль наследника:</strong> {will.heirRole}</Text>
+                                        <Text><strong>Сумма регулярного перевода:</strong> {will.transferAmount} ETH</Text>
+                                        <Text><strong>Частота выплат:</strong> {will.transferFrequency} сек.</Text>
+                                        <Text><strong>Лимит:</strong> {will.limit} ETH</Text>
                                     </Box>
                                 </ListItem>
                             ))}
