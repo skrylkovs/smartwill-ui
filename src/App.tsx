@@ -389,7 +389,7 @@ function App() {
     const isCorrectNetwork = network && network.chainId === 421614;
 
     return (
-        <Container py={6}>
+        <Container py={6} maxW="container.lg">
             <VStack spacing={6}>
                 <Heading>💼 SmartWill</Heading>
                 
@@ -436,10 +436,12 @@ function App() {
                                                 <AlertIcon />
                                                 <AlertDescription>Не удалось найти или создать фабрику автоматически.</AlertDescription>
                                             </Alert>
+                                            {/* Кнопка скрыта
                                             <DeployFactoryButton 
                                                 signer={signer!} 
                                                 onFactoryDeployed={handleFactoryDeployed} 
                                             />
+                                            */}
                                         </>
                                     )}
                                 </VStack>
@@ -448,10 +450,12 @@ function App() {
                             <>
                                 <HStack justifyContent="space-between" align="center" w="100%">
                                     <Text>Адрес фабрики: {factoryAddress}</Text>
+                                    {/* Кнопка скрыта
                                     <DeployFactoryButton 
                                         signer={signer!} 
                                         onFactoryDeployed={handleFactoryDeployed} 
                                     />
+                                    */}
                                 </HStack>
                                 <HStack spacing={4}>
                                     <Button onClick={() => setShowMyWills(false)} colorScheme={!showMyWills ? "blue" : "gray"}>
