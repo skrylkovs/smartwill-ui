@@ -13,11 +13,17 @@ import {
     AlertTitle,
     AlertDescription,
     useToast,
-    Flex
+    Flex,
+    useColorModeValue,
+    Badge,
+    Icon,
+    Divider
 } from "@chakra-ui/react";
+import { FaWallet, FaFileContract, FaShieldAlt } from "react-icons/fa";
 import CreateWillForm from "./components/CreateWillForm";
 import MyWills from "./components/MyWills";
 import DeployFactoryButton from "./components/DeployFactoryButton";
+import { ThemeToggle } from "./components/ui/ThemeToggle";
 import factoryAbi from "./contracts/SmartWillFactory.json";
 
 // Конфигурация приложения
@@ -389,35 +395,93 @@ function App() {
     // Проверяем, находимся ли мы на правильной сети (Arbitrum Sepolia)
     const isCorrectNetwork = network && network.chainId === 421614;
 
+    const bgGradient = useColorModeValue(
+        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)'
+    );
+
+    const cardBg = useColorModeValue('white', 'gray.800');
+    const textColor = useColorModeValue('gray.600', 'gray.300');
+
     return (
-        <Box bg="gray.50" minH="100vh">
+        <Box bg={useColorModeValue('gray.50', 'gray.900')} minH="100vh">
+            {/* Современный хедер */}
             <Box 
-                bg="linear-gradient(135deg, #4776E6 0%, #8E54E9 100%)" 
-                py={4} 
+                bgGradient={bgGradient}
+                py={6} 
                 px={6}
-                boxShadow="md"
+                boxShadow="xl"
+                position="relative"
+                overflow="hidden"
             >
-                <Container maxW="container.lg">
+                {/* Декоративные элементы */}
+                <Box
+                    position="absolute"
+                    top="-50%"
+                    right="-10%"
+                    width="300px"
+                    height="300px"
+                    borderRadius="full"
+                    bg="whiteAlpha.100"
+                    filter="blur(100px)"
+                />
+                <Box
+                    position="absolute"
+                    bottom="-30%"
+                    left="-5%"
+                    width="200px"
+                    height="200px"
+                    borderRadius="full"
+                    bg="whiteAlpha.50"
+                    filter="blur(80px)"
+                />
+                
+                <Container maxW="container.lg" position="relative" zIndex={1}>
                     <Flex justifyContent="space-between" alignItems="center">
-                        <HStack spacing={2}>
-                            <Heading size="md" color="white">💼 SmartWill</Heading>
+                        <HStack spacing={4}>
+                            <Icon as={FaShieldAlt} boxSize={8} color="white" />
+                            <VStack align="start" spacing={0}>
+                                <Heading size="lg" color="white" fontWeight="bold">
+                                    SmartWill
+                                </Heading>
+                                <Text fontSize="sm" color="whiteAlpha.800">
+                                    Цифровое наследство на блокчейне
+                                </Text>
+                            </VStack>
                         </HStack>
-                        {account && (
-                            <Box textAlign="right">
-                                <Text fontSize="sm" color="white" opacity="0.9">Кошелек: {account}</Text>
-                                {factoryAddress && (
-                                    <Text fontSize="sm" color="white" opacity="0.8">Адрес фабрики: {factoryAddress}</Text>
-                                )}
-                            </Box>
-                        )}
+                        
+                        <HStack spacing={4}>
+                            <ThemeToggle />
+                            {account && (
+                                <VStack align="end" spacing={1}>
+                                    <HStack>
+                                        <Icon as={FaWallet} color="white" />
+                                        <Text fontSize="sm" color="white" fontWeight="medium">
+                                            {`${account.slice(0, 6)}...${account.slice(-4)}`}
+                                        </Text>
+                                    </HStack>
+                                    {factoryAddress && (
+                                        <Badge colorScheme="green" variant="subtle" fontSize="xs">
+                                            Фабрика подключена
+                                        </Badge>
+                                    )}
+                                </VStack>
+                            )}
+                        </HStack>
                     </Flex>
                 </Container>
             </Box>
             
-            <Container py={8} maxW="container.lg">
+            <Container py={12} maxW="container.lg">
                 <VStack spacing={8}>
                     {!isCorrectNetwork && network && (
-                        <Alert status="warning" borderRadius="lg" boxShadow="sm" variant="left-accent">
+                        <Alert 
+                            status="warning" 
+                            borderRadius="xl" 
+                            boxShadow="lg" 
+                            variant="modern"
+                            bg={cardBg}
+                        >
                             <AlertIcon />
                             <Box>
                                 <AlertTitle>Неверная сеть!</AlertTitle>
@@ -430,21 +494,61 @@ function App() {
                     )}
                     
                     {!account ? (
-                        <Box textAlign="center" py={10}>
-                            <VStack spacing={6}>
-                                <Heading size="xl">Управляйте своими цифровыми активами</Heading>
-                                <Text fontSize="lg" color="gray.600" maxW="600px">
-                                    SmartWill помогает создавать умные завещания на блокчейне, 
-                                    обеспечивая безопасную передачу ваших криптоактивов наследникам.
-                                </Text>
+                        <Box textAlign="center" py={16}>
+                            <VStack spacing={8}>
+                                <VStack spacing={4}>
+                                    <Icon as={FaFileContract} boxSize={16} color="purple.500" />
+                                    <Heading size="2xl" bgGradient="linear(to-r, purple.400, purple.600)" bgClip="text">
+                                        Управляйте своими цифровыми активами
+                                    </Heading>
+                                    <Text fontSize="xl" color={textColor} maxW="700px" lineHeight="tall">
+                                        SmartWill помогает создавать умные завещания на блокчейне, 
+                                        обеспечивая безопасную передачу ваших криптоактивов наследникам.
+                                    </Text>
+                                </VStack>
+                                
+                                {/* Преимущества */}
+                                <HStack spacing={8} pt={8}>
+                                    <VStack spacing={2}>
+                                        <Icon as={FaShieldAlt} boxSize={8} color="green.500" />
+                                        <Text fontWeight="semibold">Безопасность</Text>
+                                        <Text fontSize="sm" color={textColor} textAlign="center">
+                                            Защищено блокчейном
+                                        </Text>
+                                    </VStack>
+                                    <VStack spacing={2}>
+                                        <Icon as={FaFileContract} boxSize={8} color="blue.500" />
+                                        <Text fontWeight="semibold">Автоматизация</Text>
+                                        <Text fontSize="sm" color={textColor} textAlign="center">
+                                            Умные контракты
+                                        </Text>
+                                    </VStack>
+                                    <VStack spacing={2}>
+                                        <Icon as={FaWallet} boxSize={8} color="purple.500" />
+                                        <Text fontWeight="semibold">Простота</Text>
+                                        <Text fontSize="sm" color={textColor} textAlign="center">
+                                            Легкое управление
+                                        </Text>
+                                    </VStack>
+                                </HStack>
+                                
                                 <Button 
                                     onClick={connect} 
-                                    size="lg" 
+                                    size="xl" 
                                     colorScheme="purple" 
-                                    px={8}
-                                    boxShadow="md"
-                                    _hover={{ transform: "translateY(-2px)", boxShadow: "lg" }}
-                                    transition="all 0.2s"
+                                    px={12}
+                                    py={6}
+                                    fontSize="lg"
+                                    leftIcon={<FaWallet />}
+                                    bgGradient="linear(to-r, purple.500, purple.600)"
+                                    _hover={{ 
+                                        bgGradient: "linear(to-r, purple.600, purple.700)",
+                                        transform: "translateY(-2px)", 
+                                        boxShadow: "xl" 
+                                    }}
+                                    _active={{ transform: "translateY(0)" }}
+                                    transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
+                                    borderRadius="xl"
                                 >
                                     Подключить кошелек
                                 </Button>
@@ -455,52 +559,62 @@ function App() {
                             {!factoryAddress ? (
                                 <Box 
                                     w="100%" 
-                                    p={6} 
-                                    borderRadius="lg" 
-                                    bg="white" 
-                                    boxShadow="base"
+                                    p={8} 
+                                    bg={cardBg}
+                                    borderRadius="xl"
+                                    boxShadow="lg"
                                 >
-                                    <Text mb={4} fontWeight="medium">Настройка вашей фабрики контрактов...</Text>
-                                    <VStack spacing={4} align="stretch">
+                                    <VStack spacing={6}>
+                                        <Heading size="md">Настройка фабрики контрактов</Heading>
+                                        <Divider />
                                         {isLoadingFactory ? (
-                                            <Alert status="info" borderRadius="md" variant="left-accent">
+                                            <Alert status="info" borderRadius="xl" variant="modern">
                                                 <AlertIcon />
-                                                <AlertDescription>Выполняется поиск вашей фабрики SmartWillFactory...</AlertDescription>
+                                                <AlertDescription>
+                                                    Выполняется поиск вашей фабрики SmartWillFactory...
+                                                </AlertDescription>
                                             </Alert>
                                         ) : isDeployingFactory ? (
-                                            <Alert status="info" borderRadius="md" variant="left-accent">
+                                            <Alert status="info" borderRadius="xl" variant="modern">
                                                 <AlertIcon />
-                                                <AlertDescription>Выполняется создание новой фабрики...</AlertDescription>
+                                                <AlertDescription>
+                                                    Выполняется создание новой фабрики...
+                                                </AlertDescription>
                                             </Alert>
                                         ) : (
-                                            <>
-                                                <Alert status="warning" borderRadius="md" variant="left-accent">
-                                                    <AlertIcon />
-                                                    <AlertDescription>Не удалось найти или создать фабрику автоматически.</AlertDescription>
-                                                </Alert>
-                                                {/* Кнопка скрыта */}
-                                            </>
+                                            <Alert status="warning" borderRadius="xl" variant="modern">
+                                                <AlertIcon />
+                                                <AlertDescription>
+                                                    Не удалось найти или создать фабрику автоматически.
+                                                </AlertDescription>
+                                            </Alert>
                                         )}
                                     </VStack>
                                 </Box>
                             ) : (
                                 <>
+                                    {/* Навигационные кнопки */}
                                     <Box 
-                                        bg="white" 
-                                        borderRadius="lg" 
-                                        p={4} 
-                                        boxShadow="base"
+                                        bg={cardBg}
+                                        borderRadius="xl" 
+                                        p={2} 
+                                        boxShadow="lg"
                                         width="100%"
-                                        mb={2}
+                                        maxW="500px"
                                     >
-                                        <HStack spacing={4}>
+                                        <HStack spacing={2}>
                                             <Button 
                                                 onClick={() => setShowMyWills(false)} 
                                                 colorScheme={!showMyWills ? "purple" : "gray"}
-                                                variant={!showMyWills ? "solid" : "outline"}
+                                                variant={!showMyWills ? "solid" : "ghost"}
                                                 flex={1}
                                                 size="lg"
-                                                _hover={{ transform: !showMyWills ? "none" : "translateY(-2px)" }}
+                                                borderRadius="lg"
+                                                leftIcon={<Icon as={FaFileContract} />}
+                                                _hover={{ 
+                                                    transform: !showMyWills ? "none" : "translateY(-1px)",
+                                                    bg: !showMyWills ? undefined : useColorModeValue('gray.100', 'gray.700')
+                                                }}
                                                 transition="all 0.2s"
                                             >
                                                 Создать завещание
@@ -508,10 +622,15 @@ function App() {
                                             <Button 
                                                 onClick={() => setShowMyWills(true)} 
                                                 colorScheme={showMyWills ? "purple" : "gray"}
-                                                variant={showMyWills ? "solid" : "outline"}
+                                                variant={showMyWills ? "solid" : "ghost"}
                                                 flex={1}
                                                 size="lg"
-                                                _hover={{ transform: showMyWills ? "none" : "translateY(-2px)" }}
+                                                borderRadius="lg"
+                                                leftIcon={<Icon as={FaWallet} />}
+                                                _hover={{ 
+                                                    transform: showMyWills ? "none" : "translateY(-1px)",
+                                                    bg: showMyWills ? undefined : useColorModeValue('gray.100', 'gray.700')
+                                                }}
                                                 transition="all 0.2s"
                                             >
                                                 Мои завещания
@@ -519,12 +638,15 @@ function App() {
                                         </HStack>
                                     </Box>
                                     
+                                    {/* Основной контент */}
                                     <Box 
-                                        p={6} 
-                                        borderRadius="lg" 
-                                        bg="white" 
-                                        boxShadow="base"
+                                        p={8} 
+                                        borderRadius="xl" 
+                                        bg={cardBg}
+                                        boxShadow="xl"
                                         width="100%"
+                                        border="1px solid"
+                                        borderColor={useColorModeValue('gray.200', 'gray.700')}
                                     >
                                         {showMyWills ? (
                                             <MyWills 

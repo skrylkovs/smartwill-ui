@@ -40,3 +40,207 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Основные стили приложения */
+.app-container {
+  min-height: 100vh;
+  background: var(--chakra-colors-gray-50);
+  transition: background-color 0.2s ease-in-out;
+}
+
+[data-theme="dark"] .app-container {
+  background: var(--chakra-colors-gray-900);
+}
+
+/* Стили для хедера */
+.header-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .header-gradient {
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+}
+
+/* Декоративные элементы */
+.header-decoration {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+/* Стили для карточек */
+.modern-card {
+  background: var(--chakra-colors-white);
+  border-radius: 16px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] .modern-card {
+  background: var(--chakra-colors-gray-800);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+  border-color: var(--chakra-colors-gray-700);
+}
+
+.modern-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .modern-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* Стили для кнопок */
+.modern-button {
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.modern-button:hover {
+  transform: translateY(-1px);
+}
+
+.modern-button:active {
+  transform: translateY(0);
+}
+
+/* Градиентные кнопки */
+.gradient-button {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  border: none;
+  color: white;
+}
+
+.gradient-button:hover {
+  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
+  box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
+}
+
+/* Стили для форм */
+.modern-input {
+  background: var(--chakra-colors-gray-100);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  transition: all 0.2s ease-in-out;
+}
+
+[data-theme="dark"] .modern-input {
+  background: var(--chakra-colors-gray-700);
+}
+
+.modern-input:focus {
+  border-color: var(--chakra-colors-purple-500);
+  box-shadow: 0 0 0 1px var(--chakra-colors-purple-500);
+  background: var(--chakra-colors-white);
+}
+
+[data-theme="dark"] .modern-input:focus {
+  background: var(--chakra-colors-gray-700);
+}
+
+/* Стили для алертов */
+.modern-alert {
+  border-radius: 16px;
+  border: 1px solid;
+  background: var(--chakra-colors-white);
+}
+
+[data-theme="dark"] .modern-alert {
+  background: var(--chakra-colors-gray-800);
+}
+
+.modern-alert.warning {
+  border-color: var(--chakra-colors-orange-500);
+}
+
+.modern-alert.error {
+  border-color: var(--chakra-colors-red-500);
+}
+
+.modern-alert.success {
+  border-color: var(--chakra-colors-green-500);
+}
+
+.modern-alert.info {
+  border-color: var(--chakra-colors-blue-500);
+}
+
+/* Анимации загрузки */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Стили для навигации */
+.nav-button {
+  border-radius: 12px;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+.nav-button.active {
+  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  color: white;
+}
+
+.nav-button:not(.active):hover {
+  background: var(--chakra-colors-gray-100);
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .nav-button:not(.active):hover {
+  background: var(--chakra-colors-gray-700);
+}
+
+/* Стили для иконок */
+.icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+}
+
+.icon-container:hover {
+  transform: scale(1.1);
+}
+
+/* Стили для бейджей */
+.modern-badge {
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .modern-card {
+    margin: 0 16px;
+  }
+  
+  .header-gradient {
+    padding: 16px;
+  }
+  
+  .nav-button {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+}

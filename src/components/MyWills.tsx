@@ -15,9 +15,23 @@ import {
     Divider,
     Center,
     Icon,
-    Grid
+    Grid,
+    useColorModeValue,
+    Badge,
+    Card,
+    CardBody,
+    CardHeader,
+    SimpleGrid,
+    Stat,
+    StatLabel,
+    StatNumber,
+    StatHelpText,
+    Alert,
+    AlertIcon,
+    AlertDescription
 } from "@chakra-ui/react";
 import { RepeatIcon } from "@chakra-ui/icons";
+import { FaWallet, FaUser, FaEthereum, FaClock, FaHeartbeat, FaFileContract } from "react-icons/fa";
 import SmartWillAbi from "../contracts/SmartWill.json";
 import factoryAbi from "../contracts/SmartWillFactory.json";
 
@@ -45,6 +59,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const [loading, setLoading] = useState(false);
     const [pingLoading, setPingLoading] = useState(false);
     const toast = useToast();
+
+    const cardBg = useColorModeValue('white', 'gray.800');
+    const textColor = useColorModeValue('gray.600', 'gray.300');
+    const borderColor = useColorModeValue('gray.200', 'gray.600');
+    const hoverBg = useColorModeValue('purple.50', 'purple.900');
 
     // Функция для форматирования времени в секундах в читаемый формат
     const formatTime = (seconds: number): string => {
@@ -316,115 +335,252 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     };
 
     return (
-        <Box w="100%">
-            <HStack justifyContent="space-between" mb={6}>
-                <Heading size="md" fontWeight="semibold">Мои завещания</Heading>
+        <VStack spacing={8} align="stretch" w="100%">
+            {/* Заголовок с кнопкой обновления */}
+            <Flex justifyContent="space-between" alignItems="center">
+                <HStack spacing={3}>
+                    <Icon as={FaFileContract} boxSize={6} color="purple.500" />
+                    <Heading size="lg" bgGradient="linear(to-r, purple.400, purple.600)" bgClip="text">
+                        Мои завещания
+                    </Heading>
+                </HStack>
                 <Button 
-                    size="sm" 
+                    size="md" 
                     onClick={refreshWills} 
                     leftIcon={<Icon as={RepeatIcon} />}
                     isLoading={loading}
                     colorScheme="purple"
                     variant="outline"
-                    _hover={{ bg: 'purple.50' }}
+                    borderRadius="lg"
+                    _hover={{ 
+                        bg: hoverBg,
+                        transform: "translateY(-1px)"
+                    }}
+                    transition="all 0.2s"
                 >
                     Обновить
                 </Button>
-            </HStack>
+            </Flex>
+
             {loading ? (
-                <Center p={10}>
-                    <VStack>
-                        <Spinner size="xl" color="purple.500" thickness="3px" speed="0.8s" />
-                        <Text mt={4} color="gray.600">Загрузка завещаний...</Text>
+                <Center p={16}>
+                    <VStack spacing={6}>
+                        <Spinner size="xl" color="purple.500" thickness="4px" speed="0.8s" />
+                        <Text fontSize="lg" color={textColor} fontWeight="medium">
+                            Загрузка завещаний...
+                        </Text>
                     </VStack>
                 </Center>
             ) : wills.length === 0 ? (
-                <Box py={10} textAlign="center">
-                    <VStack spacing={4}>
-                        <Icon as={RepeatIcon} w={12} h={12} color="gray.300" />
-                        <Text fontSize="lg" color="gray.500" fontWeight="medium">У вас пока нет завещаний</Text>
-                        <Text fontSize="md" color="gray.500">Создайте новое завещание, чтобы начать</Text>
+                <Box py={16} textAlign="center">
+                    <VStack spacing={6}>
+                        <Icon as={FaFileContract} boxSize={16} color="gray.300" />
+                        <VStack spacing={2}>
+                            <Heading size="md" color={textColor}>
+                                У вас пока нет завещаний
+                            </Heading>
+                            <Text fontSize="lg" color={textColor}>
+                                Создайте новое завещание, чтобы начать управлять своими активами
+                            </Text>
+                        </VStack>
                     </VStack>
                 </Box>
             ) : (
                 <>
-                    <List spacing={4}>
-                        {wills.map((will) => (
-                            <ListItem 
-                                key={will.address} 
-                                p={5} 
-                                borderWidth="1px" 
-                                borderColor="gray.200" 
-                                borderRadius="lg" 
-                                boxShadow="sm"
-                                transition="all 0.2s"
-                                _hover={{ boxShadow: 'md', borderColor: 'purple.200' }}
-                                bg="white"
+                    {/* Статистика */}
+                    <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
+                        <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
+                            <CardBody>
+                                <Stat>
+                                    <StatLabel color={textColor}>Всего завещаний</StatLabel>
+                                    <StatNumber color="purple.500">{wills.length}</StatNumber>
+                                    <StatHelpText>Активных контрактов</StatHelpText>
+                                </Stat>
+                            </CardBody>
+                        </Card>
+                        
+                        <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
+                            <CardBody>
+                                <Stat>
+                                    <StatLabel color={textColor}>Общий баланс</StatLabel>
+                                    <StatNumber color="green.500">
+                                        {wills.reduce((sum, will) => sum + parseFloat(will.balance || '0'), 0).toFixed(4)} ETH
+                                    </StatNumber>
+                                    <StatHelpText>Во всех завещаниях</StatHelpText>
+                                </Stat>
+                            </CardBody>
+                        </Card>
+                        
+                        <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
+                            <CardBody>
+                                <Stat>
+                                    <StatLabel color={textColor}>Последняя активность</StatLabel>
+                                    <StatNumber fontSize="md" color="blue.500">
+                                        {lastPing}
+                                    </StatNumber>
+                                    <StatHelpText>Подтверждение жизни</StatHelpText>
+                                </Stat>
+                            </CardBody>
+                        </Card>
+                    </SimpleGrid>
+
+                    {/* Список завещаний */}
+                    <VStack spacing={6} align="stretch">
+                        {wills.map((will, index) => (
+                            <Card 
+                                key={will.address}
+                                bg={cardBg}
+                                borderRadius="xl"
+                                boxShadow="lg"
+                                border="1px solid"
+                                borderColor={borderColor}
+                                transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                                _hover={{ 
+                                    transform: "translateY(-2px)",
+                                    boxShadow: "xl",
+                                    borderColor: "purple.300"
+                                }}
                             >
-                                <Box>
-                                    <Heading size="sm" fontWeight="semibold" mb={3} color="purple.700">
-                                        {will.heirName}
-                                    </Heading>
-                                    <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={4}>
-                                        <VStack align="start" spacing={2}>
-                                            <Text fontSize="sm"><strong>Роль наследника:</strong> {will.heirRole}</Text>
-                                            <Text fontSize="sm"><strong>Кошелек наследника:</strong> {will.heir}</Text>
-                                            <Text fontSize="sm"><strong>Баланс:</strong> {will.balance} ETH</Text>
+                                <CardHeader pb={2}>
+                                    <HStack justify="space-between">
+                                        <HStack spacing={3}>
+                                            <Icon as={FaUser} color="blue.500" boxSize={5} />
+                                            <VStack align="start" spacing={0}>
+                                                <Heading size="md" color="purple.600">
+                                                    {will.heirName}
+                                                </Heading>
+                                                <Badge colorScheme="blue" variant="subtle" borderRadius="md">
+                                                    {will.heirRole}
+                                                </Badge>
+                                            </VStack>
+                                        </HStack>
+                                        <Badge colorScheme="green" variant="outline" fontSize="sm" px={3} py={1}>
+                                            Завещание #{index + 1}
+                                        </Badge>
+                                    </HStack>
+                                </CardHeader>
+                                
+                                <CardBody pt={2}>
+                                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                                        {/* Информация о наследнике */}
+                                        <VStack align="start" spacing={3}>
+                                            <HStack>
+                                                <Icon as={FaWallet} color="gray.500" />
+                                                <Text fontSize="sm" fontWeight="semibold" color={textColor}>
+                                                    Кошелек наследника
+                                                </Text>
+                                            </HStack>
+                                            <Text fontSize="sm" fontFamily="monospace" color="blue.500">
+                                                {`${will.heir.slice(0, 6)}...${will.heir.slice(-4)}`}
+                                            </Text>
                                         </VStack>
-                                        <VStack align="start" spacing={2}>
-                                            <Text fontSize="sm"><strong>Сумма регулярного перевода:</strong> {will.transferAmount} ETH</Text>
-                                            <Text fontSize="sm"><strong>Частота выплат:</strong> {
-                                                Number(will.transferFrequency) < 60 
-                                                    ? `${will.transferFrequency} сек.` 
-                                                    : `${Math.floor(Number(will.transferFrequency) / 60)} мин.`
-                                            }</Text>
-                                            <Text fontSize="sm"><strong>Лимит:</strong> {will.limit} ETH</Text>
+
+                                        {/* Финансовая информация */}
+                                        <VStack align="start" spacing={3}>
+                                            <HStack>
+                                                <Icon as={FaEthereum} color="gray.500" />
+                                                <Text fontSize="sm" fontWeight="semibold" color={textColor}>
+                                                    Финансы
+                                                </Text>
+                                            </HStack>
+                                            <VStack align="start" spacing={1}>
+                                                <Text fontSize="sm">
+                                                    <strong>Баланс:</strong> {will.balance} ETH
+                                                </Text>
+                                                <Text fontSize="sm">
+                                                    <strong>Перевод:</strong> {will.transferAmount} ETH
+                                                </Text>
+                                                <Text fontSize="sm">
+                                                    <strong>Лимит:</strong> {will.limit} ETH
+                                                </Text>
+                                            </VStack>
                                         </VStack>
-                                    </Grid>
-                                    <Text color="blue.500" fontSize="sm" mt={4} opacity={0.8}>
-                                        <strong>Адрес контракта:</strong> {will.address}
-                                    </Text>
-                                </Box>
-                            </ListItem>
+
+                                        {/* Временная информация */}
+                                        <VStack align="start" spacing={3}>
+                                            <HStack>
+                                                <Icon as={FaClock} color="gray.500" />
+                                                <Text fontSize="sm" fontWeight="semibold" color={textColor}>
+                                                    Частота выплат
+                                                </Text>
+                                            </HStack>
+                                            <Badge colorScheme="orange" variant="subtle" borderRadius="md">
+                                                {formatTime(Number(will.transferFrequency))}
+                                            </Badge>
+                                        </VStack>
+                                    </SimpleGrid>
+                                    
+                                    <Divider my={4} />
+                                    
+                                    <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="lg">
+                                        <Text fontSize="xs" color={textColor} fontFamily="monospace">
+                                            <strong>Адрес контракта:</strong> {will.address}
+                                        </Text>
+                                    </Box>
+                                </CardBody>
+                            </Card>
                         ))}
-                    </List>
+                    </VStack>
                     
-                    <Box 
-                        mt={8} 
-                        p={6} 
-                        borderRadius="lg" 
-                        borderWidth="1px"
-                        borderColor="blue.200" 
-                        bg="blue.50"
-                        boxShadow="md"
+                    {/* Кнопка подтверждения жизни */}
+                    <Card 
+                        bg={useColorModeValue('blue.50', 'blue.900')}
+                        borderRadius="xl" 
+                        border="2px solid"
+                        borderColor="blue.200"
+                        boxShadow="lg"
                     >
-                        <VStack spacing={5} align="center">
-                            <Button 
-                                onClick={handlePingAll}
-                                colorScheme="blue"
-                                size="lg"
-                                isLoading={pingLoading}
-                                loadingText="Отправка..."
-                                width="100%"
-                                height="60px"
-                                boxShadow="sm"
-                                _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
-                                transition="all 0.2s"
-                            >
-                                Подтвердить, что я жив
-                            </Button>
-                            
-                            <Divider />
-                            
-                            <Box textAlign="center">
-                                <Text fontSize="sm" color="gray.600" mb={1}>Последнее подтверждение:</Text>
-                                <Text fontWeight="bold" fontSize="md">{lastPing}</Text>
-                            </Box>
-                        </VStack>
-                    </Box>
+                        <CardBody>
+                            <VStack spacing={6}>
+                                <VStack spacing={2} textAlign="center">
+                                    <HStack>
+                                        <Icon as={FaHeartbeat} color="red.500" boxSize={6} />
+                                        <Heading size="md" color="blue.600">
+                                            Подтверждение активности
+                                        </Heading>
+                                    </HStack>
+                                    <Text color={textColor} fontSize="sm" maxW="500px">
+                                        Регулярно подтверждайте свою активность, чтобы завещания оставались под вашим контролем
+                                    </Text>
+                                </VStack>
+                                
+                                <Button 
+                                    onClick={handlePingAll}
+                                    colorScheme="blue"
+                                    size="lg"
+                                    isLoading={pingLoading}
+                                    loadingText="Отправка подтверждения..."
+                                    width={{ base: "100%", md: "auto" }}
+                                    px={12}
+                                    py={6}
+                                    fontSize="lg"
+                                    fontWeight="bold"
+                                    leftIcon={<Icon as={FaHeartbeat} />}
+                                    bgGradient="linear(to-r, blue.500, blue.600)"
+                                    _hover={{ 
+                                        bgGradient: "linear(to-r, blue.600, blue.700)",
+                                        transform: "translateY(-2px)", 
+                                        boxShadow: "xl" 
+                                    }}
+                                    _active={{ transform: "translateY(0)" }}
+                                    transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
+                                    borderRadius="xl"
+                                >
+                                    Я жив и здоров!
+                                </Button>
+                                
+                                <Alert status="info" borderRadius="lg" variant="subtle">
+                                    <AlertIcon />
+                                    <AlertDescription fontSize="sm">
+                                        Последнее подтверждение: <strong>{lastPing}</strong>
+                                    </AlertDescription>
+                                </Alert>
+                            </VStack>
+                        </CardBody>
+                    </Card>
                 </>
             )}
-        </Box>
+        </VStack>
     );
 });
 

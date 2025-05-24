@@ -1,18 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { ChakraProvider, extendTheme, ThemeConfig } from "@chakra-ui/react";
+import { ChakraProvider, ColorModeScript } from "@chakra-ui/react";
 import App from "./App";
-
-// ✅ Новая тема (возможно, требуются изменения в Chakra UI 3)
-const config: ThemeConfig = {
-    initialColorMode: "light",
-    useSystemColorMode: false,
-};
-
-const theme = extendTheme({ config });
+import theme from "./theme";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
+        <ColorModeScript initialColorMode={theme.config.initialColorMode} />
         <ChakraProvider theme={theme}>
             <App />
         </ChakraProvider>
