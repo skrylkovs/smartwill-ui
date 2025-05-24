@@ -339,8 +339,8 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             {/* Заголовок с кнопкой обновления */}
             <Flex justifyContent="space-between" alignItems="center">
                 <HStack spacing={3}>
-                    <Icon as={FaFileContract} boxSize={6} color="purple.500" />
-                    <Heading size="lg" bgGradient="linear(to-r, purple.400, purple.600)" bgClip="text">
+                    <Icon as={FaFileContract} boxSize={6} color="#081781" />
+                    <Heading size="lg" bgGradient="linear(to-r, #081781, #061264)" bgClip="text">
                         Мои завещания
                     </Heading>
                 </HStack>
@@ -352,9 +352,14 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                     colorScheme="purple"
                     variant="outline"
                     borderRadius="lg"
+                    borderColor="#081781"
+                    color="#081781"
                     _hover={{ 
-                        bg: hoverBg,
-                        transform: "translateY(-1px)"
+                        bg: "transparent",
+                        transform: "translateY(-1px)",
+                        bgGradient: "linear(to-r, #081781, #061264)",
+                        color: "white",
+                        borderColor: "transparent"
                     }}
                     transition="all 0.2s"
                 >
@@ -365,7 +370,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             {loading ? (
                 <Center p={16}>
                     <VStack spacing={6}>
-                        <Spinner size="xl" color="purple.500" thickness="4px" speed="0.8s" />
+                        <Spinner size="xl" color="#081781" thickness="4px" speed="0.8s" />
                         <Text fontSize="lg" color={textColor} fontWeight="medium">
                             Загрузка завещаний...
                         </Text>
@@ -393,7 +398,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                             <CardBody>
                                 <Stat>
                                     <StatLabel color={textColor}>Всего завещаний</StatLabel>
-                                    <StatNumber color="purple.500">{wills.length}</StatNumber>
+                                    <StatNumber color="#081781">{wills.length}</StatNumber>
                                     <StatHelpText>Активных контрактов</StatHelpText>
                                 </Stat>
                             </CardBody>
@@ -438,7 +443,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                 _hover={{ 
                                     transform: "translateY(-2px)",
                                     boxShadow: "xl",
-                                    borderColor: "purple.300"
+                                    borderColor: "#081781"
                                 }}
                             >
                                 <CardHeader pb={2}>
@@ -446,7 +451,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                         <HStack spacing={3}>
                                             <Icon as={FaUser} color="blue.500" boxSize={5} />
                                             <VStack align="start" spacing={0}>
-                                                <Heading size="md" color="purple.600">
+                                                <Heading size="md" color="#081781">
                                                     {will.heirName}
                                                 </Heading>
                                                 <Badge colorScheme="blue" variant="subtle" borderRadius="md">
@@ -535,7 +540,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                 <VStack spacing={2} textAlign="center">
                                     <HStack>
                                         <Icon as={FaHeartbeat} color="red.500" boxSize={6} />
-                                        <Heading size="md" color="blue.600">
+                                        <Heading size="md" color="#081781">
                                             Подтверждение активности
                                         </Heading>
                                     </HStack>
@@ -556,9 +561,10 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                     fontSize="lg"
                                     fontWeight="bold"
                                     leftIcon={<Icon as={FaHeartbeat} />}
-                                    bgGradient="linear(to-r, blue.500, blue.600)"
+                                    bgGradient="linear(to-r, #081781, #061264)"
+                                    color="white"
                                     _hover={{ 
-                                        bgGradient: "linear(to-r, blue.600, blue.700)",
+                                        bgGradient: "linear(to-r, #061264, #040d47)",
                                         transform: "translateY(-2px)", 
                                         boxShadow: "xl" 
                                     }}

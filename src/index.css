@@ -87,7 +87,7 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 2px solid #a855f7;
+  outline: 2px solid #081781;
   outline-offset: 2px;
 }
 
@@ -101,7 +101,7 @@ select {
 
 /* Стили для градиентного текста */
 .gradient-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #081781 0%, #061264 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

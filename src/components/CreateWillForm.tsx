@@ -193,8 +193,8 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             {/* Заголовок */}
             <Box textAlign="center">
                 <HStack justify="center" mb={4}>
-                    <Icon as={FaShieldAlt} boxSize={8} color="purple.500" />
-                    <Heading size="lg" bgGradient="linear(to-r, purple.400, purple.600)" bgClip="text">
+                    <Icon as={FaShieldAlt} boxSize={8} color="#081781" />
+                    <Heading size="lg" bgGradient="linear(to-r, #081781, #061264)" bgClip="text">
                         Создание завещания
                     </Heading>
                 </HStack>
@@ -225,10 +225,10 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                             border="2px solid"
                             borderColor={borderColor}
                             borderRadius="lg"
-                            _hover={{ borderColor: "purple.300" }}
+                            _hover={{ borderColor: "#081781" }}
                             _focus={{ 
-                                borderColor: "purple.500", 
-                                boxShadow: "0 0 0 1px var(--chakra-colors-purple-500)",
+                                borderColor: "#081781", 
+                                boxShadow: "0 0 0 1px #081781",
                                 bg: cardBg
                             }}
                             placeholder="Иванов Иван Иванович"
@@ -248,10 +248,10 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                             border="2px solid"
                             borderColor={borderColor}
                             borderRadius="lg"
-                            _hover={{ borderColor: "purple.300" }}
+                            _hover={{ borderColor: "#081781" }}
                             _focus={{ 
-                                borderColor: "purple.500", 
-                                boxShadow: "0 0 0 1px var(--chakra-colors-purple-500)",
+                                borderColor: "#081781", 
+                                boxShadow: "0 0 0 1px #081781",
                                 bg: cardBg
                             }}
                             placeholder="Сын, дочь, супруг(а)"
@@ -271,10 +271,10 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                             border="2px solid"
                             borderColor={borderColor}
                             borderRadius="lg"
-                            _hover={{ borderColor: "purple.300" }}
+                            _hover={{ borderColor: "#081781" }}
                             _focus={{ 
-                                borderColor: "purple.500", 
-                                boxShadow: "0 0 0 1px var(--chakra-colors-purple-500)",
+                                borderColor: "#081781", 
+                                boxShadow: "0 0 0 1px #081781",
                                 bg: cardBg
                             }}
                             placeholder="0x742d35Cc6634C0532925a3b8D4C9db96590c6C87"
@@ -310,10 +310,10 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                             border="2px solid"
                             borderColor={borderColor}
                             borderRadius="lg"
-                            _hover={{ borderColor: "purple.300" }}
+                            _hover={{ borderColor: "#081781" }}
                             _focus={{ 
-                                borderColor: "purple.500", 
-                                boxShadow: "0 0 0 1px var(--chakra-colors-purple-500)",
+                                borderColor: "#081781", 
+                                boxShadow: "0 0 0 1px #081781",
                                 bg: cardBg
                             }}
                             placeholder="0.001"
@@ -338,10 +338,10 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                             border="2px solid"
                             borderColor={borderColor}
                             borderRadius="lg"
-                            _hover={{ borderColor: "purple.300" }}
+                            _hover={{ borderColor: "#081781" }}
                             _focus={{ 
-                                borderColor: "purple.500", 
-                                boxShadow: "0 0 0 1px var(--chakra-colors-purple-500)",
+                                borderColor: "#081781", 
+                                boxShadow: "0 0 0 1px #081781",
                                 bg: cardBg
                             }}
                             placeholder="0.005"
@@ -381,10 +381,10 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                                 border="2px solid"
                                 borderColor={borderColor}
                                 borderRadius="lg"
-                                _hover={{ borderColor: "purple.300" }}
+                                _hover={{ borderColor: "#081781" }}
                                 _focus={{ 
-                                    borderColor: "purple.500", 
-                                    boxShadow: "0 0 0 1px var(--chakra-colors-purple-500)",
+                                    borderColor: "#081781", 
+                                    boxShadow: "0 0 0 1px #081781",
                                     bg: cardBg
                                 }}
                             />
@@ -418,10 +418,10 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                                 border="2px solid"
                                 borderColor={borderColor}
                                 borderRadius="lg"
-                                _hover={{ borderColor: "purple.300" }}
+                                _hover={{ borderColor: "#081781" }}
                                 _focus={{ 
-                                    borderColor: "purple.500", 
-                                    boxShadow: "0 0 0 1px var(--chakra-colors-purple-500)",
+                                    borderColor: "#081781", 
+                                    boxShadow: "0 0 0 1px #081781",
                                     bg: cardBg
                                 }}
                             />
@@ -470,9 +470,9 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                     py={6}
                     fontSize="lg"
                     fontWeight="bold"
-                    bgGradient="linear(to-r, purple.500, purple.600)"
+                    bgGradient="linear(to-r, #081781, #061264)"
                     _hover={{ 
-                        bgGradient: "linear(to-r, purple.600, purple.700)",
+                        bgGradient: "linear(to-r, #061264, #040d47)",
                         transform: "translateY(-2px)", 
                         boxShadow: "xl" 
                     }}

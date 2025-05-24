@@ -396,7 +396,7 @@ function App() {
     const isCorrectNetwork = network && network.chainId === 421614;
 
     const bgGradient = useColorModeValue(
-        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        'linear-gradient(135deg, #081781 0%, #061264 100%)',
         'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)'
     );
 
@@ -451,7 +451,6 @@ function App() {
                         </HStack>
                         
                         <HStack spacing={4}>
-                            <ThemeToggle />
                             {account && (
                                 <VStack align="end" spacing={1}>
                                     <HStack>
@@ -461,7 +460,16 @@ function App() {
                                         </Text>
                                     </HStack>
                                     {factoryAddress && (
-                                        <Badge colorScheme="green" variant="subtle" fontSize="xs">
+                                        <Badge 
+                                            colorScheme="blue" 
+                                            variant="solid" 
+                                            fontSize="xs"
+                                            bg="blue.100"
+                                            color="blue.800"
+                                            px={3}
+                                            py={1}
+                                            borderRadius="full"
+                                        >
                                             Фабрика подключена
                                         </Badge>
                                     )}
@@ -497,8 +505,8 @@ function App() {
                         <Box textAlign="center" py={16}>
                             <VStack spacing={8}>
                                 <VStack spacing={4}>
-                                    <Icon as={FaFileContract} boxSize={16} color="purple.500" />
-                                    <Heading size="2xl" bgGradient="linear(to-r, purple.400, purple.600)" bgClip="text">
+                                    <Icon as={FaFileContract} boxSize={16} color="#081781" />
+                                    <Heading size="2xl" bgGradient="linear(to-r, #081781, #061264)" bgClip="text">
                                         Управляйте своими цифровыми активами
                                     </Heading>
                                     <Text fontSize="xl" color={textColor} maxW="700px" lineHeight="tall">
@@ -524,7 +532,7 @@ function App() {
                                         </Text>
                                     </VStack>
                                     <VStack spacing={2}>
-                                        <Icon as={FaWallet} boxSize={8} color="purple.500" />
+                                        <Icon as={FaWallet} boxSize={8} color="#081781" />
                                         <Text fontWeight="semibold">Простота</Text>
                                         <Text fontSize="sm" color={textColor} textAlign="center">
                                             Легкое управление
@@ -540,9 +548,9 @@ function App() {
                                     py={6}
                                     fontSize="lg"
                                     leftIcon={<FaWallet />}
-                                    bgGradient="linear(to-r, purple.500, purple.600)"
+                                    bgGradient="linear(to-r, #081781, #061264)"
                                     _hover={{ 
-                                        bgGradient: "linear(to-r, purple.600, purple.700)",
+                                        bgGradient: "linear(to-r, #061264, #040d47)",
                                         transform: "translateY(-2px)", 
                                         boxShadow: "xl" 
                                     }}
@@ -611,9 +619,11 @@ function App() {
                                                 size="lg"
                                                 borderRadius="lg"
                                                 leftIcon={<Icon as={FaFileContract} />}
+                                                bgGradient={!showMyWills ? "linear(to-r, #081781, #061264)" : undefined}
                                                 _hover={{ 
                                                     transform: !showMyWills ? "none" : "translateY(-1px)",
-                                                    bg: !showMyWills ? undefined : useColorModeValue('gray.100', 'gray.700')
+                                                    bg: !showMyWills ? undefined : useColorModeValue('gray.100', 'gray.700'),
+                                                    bgGradient: !showMyWills ? "linear(to-r, #061264, #040d47)" : undefined
                                                 }}
                                                 transition="all 0.2s"
                                             >
@@ -627,9 +637,11 @@ function App() {
                                                 size="lg"
                                                 borderRadius="lg"
                                                 leftIcon={<Icon as={FaWallet} />}
+                                                bgGradient={showMyWills ? "linear(to-r, #081781, #061264)" : undefined}
                                                 _hover={{ 
                                                     transform: showMyWills ? "none" : "translateY(-1px)",
-                                                    bg: showMyWills ? undefined : useColorModeValue('gray.100', 'gray.700')
+                                                    bg: showMyWills ? undefined : useColorModeValue('gray.100', 'gray.700'),
+                                                    bgGradient: showMyWills ? "linear(to-r, #061264, #040d47)" : undefined
                                                 }}
                                                 transition="all 0.2s"
                                             >

@@ -54,7 +54,7 @@
 
 /* Стили для хедера */
 .header-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #081781 0%, #061264 100%);
   position: relative;
   overflow: hidden;
 }
@@ -115,14 +115,14 @@
 
 /* Градиентные кнопки */
 .gradient-button {
-  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  background: linear-gradient(135deg, #081781 0%, #061264 100%);
   border: none;
   color: white;
 }
 
 .gradient-button:hover {
-  background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%);
-  box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
+  background: linear-gradient(135deg, #061264 0%, #040d47 100%);
+  box-shadow: 0 10px 20px rgba(8, 23, 129, 0.3);
 }
 
 /* Стили для форм */
@@ -138,8 +138,8 @@
 }
 
 .modern-input:focus {
-  border-color: var(--chakra-colors-purple-500);
-  box-shadow: 0 0 0 1px var(--chakra-colors-purple-500);
+  border-color: #081781;
+  box-shadow: 0 0 0 1px #081781;
   background: var(--chakra-colors-white);
 }
 
@@ -196,7 +196,7 @@
 }
 
 .nav-button.active {
-  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  background: linear-gradient(135deg, #081781 0%, #061264 100%);
   color: white;
 }
 
