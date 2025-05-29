@@ -23,7 +23,6 @@ import {
     NumberInputStepper,
     NumberIncrementStepper,
     NumberDecrementStepper,
-    Textarea,
     Badge
 } from "@chakra-ui/react";
 import { FaUser, FaEthereum, FaClock, FaShieldAlt } from "react-icons/fa";

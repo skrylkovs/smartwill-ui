@@ -6,8 +6,6 @@ import {
     Text,
     VStack,
     Heading,
-    List,
-    ListItem,
     Spinner,
     HStack,
     Flex,
@@ -15,7 +13,6 @@ import {
     Divider,
     Center,
     Icon,
-    Grid,
     useColorModeValue,
     Badge,
     Card,
@@ -63,7 +60,6 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const cardBg = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.600', 'gray.300');
     const borderColor = useColorModeValue('gray.200', 'gray.600');
-    const hoverBg = useColorModeValue('purple.50', 'purple.900');
 
     // Функция для форматирования времени в секундах в читаемый формат
     const formatTime = (seconds: number): string => {
@@ -206,7 +202,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
 
             // Отправляем один пинг в фабрику
-            const tx = await factory.ping();
+            await factory.ping();
 
             toast({
                 title: "Успешно!",
