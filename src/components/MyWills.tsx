@@ -31,6 +31,7 @@ import { RepeatIcon } from "@chakra-ui/icons";
 import { FaWallet, FaUser, FaEthereum, FaClock, FaHeartbeat, FaFileContract } from "react-icons/fa";
 import SmartWillAbi from "../contracts/SmartWill.json";
 import factoryAbi from "../contracts/SmartWillFactory.json";
+import DiagnosticInfo from "./DiagnosticInfo";
 
 interface MyWillsProps {
     signer: ethers.Signer;
@@ -234,36 +235,45 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
         try {
             setLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
+            const userAddress = await signer.getAddress();
             
-            // Получаем все развернутые завещания
-            // Используем альтернативный подход для получения списка завещаний
+            console.log("🔍 Диагностика загрузки завещаний:");
+            console.log("👤 Адрес пользователя:", userAddress);
+            console.log("🏭 Адрес фабрики:", factoryAddress);
+            
+            // Получаем только завещания текущего пользователя (безопасно)
             let willsList = [];
             try {
-                // Пробуем получить список всех завещаний напрямую
-                willsList = await factory.getDeployedWills();
+                // Используем безопасный метод getMyWills()
+                willsList = await factory.getMyWills();
+                console.log("✅ Найдено завещаний текущего пользователя:", willsList.length);
+                console.log("📄 Адреса завещаний:", willsList);
             } catch (error) {
-                console.log("Ошибка при вызове getDeployedWills, пробуем альтернативный метод:", error);
-                
-                // Если напрямую не получилось, получаем длину массива и считываем по одному
-                let index = 0;
-                let continueLoop = true;
-                
-                while (continueLoop) {
-                    try {
-                        const willAddress = await factory.deployedWills(index);
-                        willsList.push(willAddress);
-                        index++;
-                    } catch (error) {
-                        console.log(`Достигнут конец списка завещаний на индексе ${index}`);
-                        continueLoop = false;
-                    }
-                }
+                console.error("❌ Ошибка при вызове getMyWills:", error);
+                // Если новый метод недоступен, возвращаем пустой массив
+                willsList = [];
             }
             
-            console.log("Найдено завещаний:", willsList.length);
+            // Дополнительная диагностика: проверяем общее количество завещаний
+            try {
+                const allWills = await factory.getDeployedWills();
+                console.log("📊 Всего завещаний в фабрике:", allWills.length);
+                console.log("🔗 Адреса всех завещаний:", allWills);
+                
+                // Проверяем mapping для текущего пользователя
+                try {
+                    const userWillsFromMapping = await factory.ownerToWills(userAddress, 0);
+                    console.log("🗂️ Первое завещание из mapping:", userWillsFromMapping);
+                } catch (mappingError) {
+                    console.log("📝 Mapping пуст для пользователя (это нормально, если завещаний нет)");
+                }
+            } catch (debugError) {
+                console.error("⚠️ Ошибка при получении отладочной информации:", debugError);
+            }
             
             // Если список завещаний пуст, завершаем работу
             if (willsList.length === 0) {
+                console.log("❌ Завещания не найдены для текущего пользователя");
                 setWills([]);
                 return;
             }
@@ -277,16 +287,16 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 willsList.map((address: string) => fetchWillInfo(address))
             );
             
-            // Отображаем все завещания, не фильтруя по владельцу
+            // Теперь отображаем только завещания текущего пользователя
             const validWills = willsInfo.filter(Boolean) as WillInfo[];
-            console.log("Валидных завещаний:", validWills.length);
+            console.log("✅ Валидных завещаний пользователя:", validWills.length);
             
             setWills(validWills);
 
             // Получаем информацию о последнем пинге
             await fetchLastPing();
         } catch (error) {
-            console.error("Ошибка при загрузке завещаний:", error);
+            console.error("💥 Общая ошибка при загрузке завещаний:", error);
         } finally {
             setLoading(false);
         }
@@ -332,6 +342,9 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
 
     return (
         <VStack spacing={8} align="stretch" w="100%">
+            {/* Диагностическая информация */}
+            <DiagnosticInfo signer={signer} factoryAddress={factoryAddress} />
+            
             {/* Заголовок с кнопкой обновления */}
             <Flex justifyContent="space-between" alignItems="center">
                 <HStack spacing={3}>
