@@ -26,8 +26,8 @@ import HeirWills from "./components/HeirWills";
 const CONFIG = {
     // API-ключ Arbiscan - замените на свой реальный ключ
     ARBISCAN_API_KEY: "EER1P87Y4I6R4JT9K3KYRWTVWET72VGH5V",
-    // Адрес единой фабрики для всех пользователей (обновлена с безопасными методами)
-    FACTORY_ADDRESS: "0xA2089BB69C5263c6B8476f509Ec4C6B00878A155"
+    // Адрес фабрики смарт-контрактов (ИСПРАВЛЕНА - теперь корректно работает с конструктором)
+    FACTORY_ADDRESS: "0x5C8798C418B8613F71C7e35450307F08a9008558"
 };
 
 function App() {

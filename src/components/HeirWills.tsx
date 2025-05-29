@@ -63,58 +63,93 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
 
     // Функция для форматирования времени в секундах в читаемый формат
     const formatTime = (seconds: number): string => {
-        if (seconds < 60) return `${seconds} сек.`;
-        if (seconds < 3600) {
-            const minutes = Math.floor(seconds / 60);
-            return `${minutes} мин.`;
+        if (seconds < 60) {
+            return `${seconds} сек`;
+        } else if (seconds < 3600) {
+            return `${Math.floor(seconds / 60)} мин`;
+        } else if (seconds < 86400) {
+            return `${Math.floor(seconds / 3600)} ч ${Math.floor((seconds % 3600) / 60)} мин`;
+        } else {
+            return `${Math.floor(seconds / 86400)} дн ${Math.floor((seconds % 86400) / 3600)} ч`;
         }
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        if (minutes === 0) return `${hours} ч.`;
-        return `${hours} ч. ${minutes} мин.`;
+    };
+
+    const formatNextClaimTime = (nextTransferTime: string): string => {
+        const nextTime = parseInt(nextTransferTime);
+        if (nextTime === 0) {
+            return "Доступно сейчас";
+        }
+        
+        const currentTime = Math.floor(Date.now() / 1000);
+        if (nextTime <= currentTime) {
+            return "Доступно сейчас";
+        }
+        
+        const timeLeft = nextTime - currentTime;
+        return `Через ${formatTime(timeLeft)}`;
     };
 
     // Получение информации о завещании для наследника
     const fetchHeirWillInfo = async (willAddress: string, userAddress: string): Promise<HeirWillInfo | null> => {
         try {
-            const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
+            console.log(`📋 Анализ завещания для наследника ${willAddress}...`);
             
-            // Проверяем, является ли пользователь наследником этого завещания
-            const heirAddress = await contract.heir();
-            if (heirAddress.toLowerCase() !== userAddress.toLowerCase()) {
-                return null; // Пользователь не является наследником этого завещания
-            }
-
-            // Получаем информацию о завещании
-            const [balance, owner, heirName, heirRole, transferAmount, transferFrequency, limit] = await Promise.all([
-                contract.getBalance(),
-                contract.owner(),
-                contract.heirName(),
-                contract.heirRole(),
-                contract.transferAmount(),
-                contract.transferFrequency(),
-                contract.limit()
+            const willContract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
+            
+            // Параллельные запросы для оптимизации
+            const [
+                balance,
+                heir,
+                heirName,
+                heirRole,
+                transferAmount,
+                transferFrequency,
+                limit,
+                ownerAddress,
+                canTransferNow,
+                nextTransferTime
+            ] = await Promise.all([
+                willContract.getBalance(),
+                willContract.heir(),
+                willContract.heirName(),
+                willContract.heirRole(),
+                willContract.transferAmount(),
+                willContract.transferFrequency(),
+                willContract.limit(),
+                willContract.owner(),
+                willContract.canTransferNow(),
+                willContract.getNextTransferTime()
             ]);
-
-            // Определяем, может ли наследник получить средства
-            // Для упрощения, пока считаем что может всегда
-            // В реальном контракте должна быть логика проверки времени и активности владельца
-            const canClaim = parseFloat(ethers.formatEther(balance)) > 0;
+            
+            console.log(`✅ Завещание ${willAddress}: heir=${heir}, user=${userAddress}, canTransfer=${canTransferNow}`);
+            
+            // Проверяем, является ли пользователь наследником
+            if (heir.toLowerCase() !== userAddress.toLowerCase()) {
+                console.log(`❌ Пользователь не является наследником завещания ${willAddress}`);
+                return null;
+            }
+            
+            // Проверяем, может ли наследник получить средства сейчас
+            const hasEnoughBalance = balance >= transferAmount;
+            const canClaim = hasEnoughBalance && canTransferNow;
+            
+            console.log(`📊 Завещание ${willAddress}: balance=${ethers.formatEther(balance)} ETH, transferAmount=${ethers.formatEther(transferAmount)} ETH, canClaim=${canClaim}`);
             
             return {
                 address: willAddress,
                 balance: ethers.formatEther(balance),
-                ownerAddress: owner,
+                ownerAddress,
                 heirName,
                 heirRole,
                 transferAmount: ethers.formatEther(transferAmount),
                 transferFrequency: transferFrequency.toString(),
                 limit: ethers.formatEther(limit),
                 canClaim,
-                nextClaimTime: "Доступно сейчас" // Placeholder
+                nextClaimTime: nextTransferTime.toString()
             };
+            
         } catch (error) {
-            console.error(`Ошибка при получении информации о завещании ${willAddress}:`, error);
+            console.error(`❌ Ошибка при анализе завещания ${willAddress}:`, error);
             return null;
         }
     };
@@ -435,9 +470,19 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                                     Частота выплат
                                                 </Text>
                                             </HStack>
-                                            <Badge colorScheme="orange" variant="subtle" borderRadius="md">
-                                                {formatTime(Number(will.transferFrequency))}
-                                            </Badge>
+                                            <VStack align="start" spacing={2}>
+                                                <Badge colorScheme="orange" variant="subtle" borderRadius="md">
+                                                    {formatTime(Number(will.transferFrequency))}
+                                                </Badge>
+                                                <Badge 
+                                                    colorScheme={will.canClaim ? "green" : "red"} 
+                                                    variant="subtle" 
+                                                    borderRadius="md"
+                                                    fontSize="xs"
+                                                >
+                                                    {formatNextClaimTime(will.nextClaimTime)}
+                                                </Badge>
+                                            </VStack>
                                         </VStack>
 
                                         {/* Действия */}

@@ -108,7 +108,19 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             }
             
             // Добавляем gas limit для решения проблемы с estimateGas
-            const gasLimit = ethers.toBigInt(800000); // Увеличенный gas limit
+            const gasLimit = ethers.toBigInt(1000000); // Увеличенный gas limit
+            
+            // Логируем параметры для отладки
+            console.log("🔧 Параметры для createSmartWill:");
+            console.log("- heir:", form.heir);
+            console.log("- heirName:", form.heirName);
+            console.log("- heirRole:", form.heirRole);
+            console.log("- transferAmount:", ethers.formatEther(transferAmountWei), "ETH");
+            console.log("- frequency:", frequency, "секунд");
+            console.log("- waitingPeriod:", waitingPeriod, "секунд");
+            console.log("- limit:", ethers.formatEther(limitWei), "ETH");
+            console.log("- value:", ethers.formatEther(limitWei), "ETH");
+            console.log("- gasLimit:", gasLimit.toString());
             
             const tx = await factory.createSmartWill(
                 form.heir,
