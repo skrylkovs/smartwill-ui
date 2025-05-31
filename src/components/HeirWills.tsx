@@ -46,6 +46,8 @@ export interface HeirWillInfo {
     heirRole: string;
     transferAmount: string;
     transferFrequency: string;
+    waitingPeriod: string;
+    ownerLastActivity: string;
     limit: string;
     canClaim: boolean;
     nextClaimTime: string;
@@ -74,17 +76,36 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
         }
     };
 
-    const formatNextClaimTime = (nextTransferTime: string): string => {
+    const formatNextClaimTime = (nextTransferTime: string, ownerLastActivity: string, waitingPeriod: string): string => {
         const nextTime = parseInt(nextTransferTime);
-        if (nextTime === 0) {
-            return "Доступно сейчас";
-        }
-        
+        const lastActivity = parseInt(ownerLastActivity);
+        const waitingSeconds = parseInt(waitingPeriod);
         const currentTime = Math.floor(Date.now() / 1000);
-        if (nextTime <= currentTime) {
-            return "Доступно сейчас";
+
+        // Если nextTransferTime равен 0, то нужно проверить период ожидания после последней активности
+        if (nextTime === 0) {
+            const timeAfterLastActivity = currentTime - lastActivity;
+            if (timeAfterLastActivity >= waitingSeconds) {
+                return "Доступно сейчас";
+            } else {
+                const timeToWait = waitingSeconds - timeAfterLastActivity;
+                return `Через ${formatTime(timeToWait)} (после активности владельца)`;
+            }
         }
-        
+
+        // Если есть nextTransferTime, используем его
+        if (nextTime <= currentTime) {
+            // Дополнительно проверяем период ожидания после последней активности
+            const timeAfterLastActivity = currentTime - lastActivity;
+            if (timeAfterLastActivity >= waitingSeconds) {
+                return "Доступно сейчас";
+            } else {
+                const timeToWait = waitingSeconds - timeAfterLastActivity;
+                return `Через ${formatTime(timeToWait)} (период ожидания после активности)`;
+            }
+        }
+
+        // Если nextTime больше текущего времени, показываем время до nextTime
         const timeLeft = nextTime - currentTime;
         return `Через ${formatTime(timeLeft)}`;
     };
@@ -93,9 +114,9 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
     const fetchHeirWillInfo = async (willAddress: string, userAddress: string): Promise<HeirWillInfo | null> => {
         try {
             console.log(`📋 Анализ завещания для наследника ${willAddress}...`);
-            
+
             const willContract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
-            
+
             // Параллельные запросы для оптимизации
             const [
                 balance,
@@ -104,6 +125,8 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                 heirRole,
                 transferAmount,
                 transferFrequency,
+                waitingPeriod,
+                ownerLastActivity,
                 limit,
                 ownerAddress,
                 canTransferNow,
@@ -115,26 +138,28 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                 willContract.heirRole(),
                 willContract.transferAmount(),
                 willContract.transferFrequency(),
+                willContract.willActivateWaitingPeriod(),
+                willContract.getOwnerLastActivity(),
                 willContract.limit(),
                 willContract.owner(),
                 willContract.canTransferNow(),
                 willContract.getNextTransferTime()
             ]);
-            
+
             console.log(`✅ Завещание ${willAddress}: heir=${heir}, user=${userAddress}, canTransfer=${canTransferNow}`);
-            
+
             // Проверяем, является ли пользователь наследником
             if (heir.toLowerCase() !== userAddress.toLowerCase()) {
                 console.log(`❌ Пользователь не является наследником завещания ${willAddress}`);
                 return null;
             }
-            
+
             // Проверяем, может ли наследник получить средства сейчас
             const hasEnoughBalance = balance >= transferAmount;
             const canClaim = hasEnoughBalance && canTransferNow;
-            
+
             console.log(`📊 Завещание ${willAddress}: balance=${ethers.formatEther(balance)} ETH, transferAmount=${ethers.formatEther(transferAmount)} ETH, canClaim=${canClaim}`);
-            
+
             return {
                 address: willAddress,
                 balance: ethers.formatEther(balance),
@@ -143,11 +168,13 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                 heirRole,
                 transferAmount: ethers.formatEther(transferAmount),
                 transferFrequency: transferFrequency.toString(),
+                waitingPeriod: waitingPeriod.toString(),
+                ownerLastActivity: ownerLastActivity.toString(),
                 limit: ethers.formatEther(limit),
                 canClaim,
                 nextClaimTime: nextTransferTime.toString()
             };
-            
+
         } catch (error) {
             console.error(`❌ Ошибка при анализе завещания ${willAddress}:`, error);
             return null;
@@ -160,17 +187,17 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
             setLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
             const userAddress = await signer.getAddress();
-            
+
             // Получаем все развернутые завещания
             let willsList = [];
             try {
                 willsList = await factory.getDeployedWills();
             } catch (error) {
                 console.log("Ошибка при вызове getDeployedWills, пробуем альтернативный метод:", error);
-                
+
                 let index = 0;
                 let continueLoop = true;
-                
+
                 while (continueLoop) {
                     try {
                         const willAddress = await factory.deployedWills(index);
@@ -182,23 +209,23 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                     }
                 }
             }
-            
+
             console.log("Проверяем завещания для наследника:", willsList.length);
-            
+
             if (willsList.length === 0) {
                 setHeirWills([]);
                 return;
             }
-            
+
             // Проверяем каждое завещание на предмет того, является ли пользователь наследником
             const heirWillsData = await Promise.all(
                 willsList.map((address: string) => fetchHeirWillInfo(address, userAddress))
             );
-            
+
             // Фильтруем только те завещания, где пользователь является наследником
             const validHeirWills = heirWillsData.filter(Boolean) as HeirWillInfo[];
             console.log("Найдено завещаний для наследника:", validHeirWills.length);
-            
+
             setHeirWills(validHeirWills);
         } catch (error) {
             console.error("Ошибка при загрузке завещаний наследника:", error);
@@ -219,10 +246,10 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
         try {
             setClaimingWill(willAddress);
             const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
-            
+
             // Вызываем функцию получения средств
             const tx = await contract.transferToHeir();
-            
+
             toast({
                 title: "Транзакция отправлена",
                 description: "Ожидание подтверждения...",
@@ -230,10 +257,10 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                 duration: 3000,
                 isClosable: true
             });
-            
+
             // Ждем подтверждения транзакции
             await tx.wait();
-            
+
             toast({
                 title: "Успешно!",
                 description: "Средства переведены на ваш кошелек",
@@ -241,10 +268,10 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                 duration: 5000,
                 isClosable: true
             });
-            
+
             // Обновляем информацию о завещаниях
             loadHeirWills();
-            
+
         } catch (error) {
             console.error("Ошибка при получении наследства:", error);
             toast({
@@ -307,15 +334,15 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                         Мое наследство
                     </Heading>
                 </HStack>
-                <Button 
-                    size="md" 
-                    onClick={refreshWills} 
+                <Button
+                    size="md"
+                    onClick={refreshWills}
                     leftIcon={<Icon as={RepeatIcon} />}
                     isLoading={loading}
                     colorScheme="green"
                     variant="outline"
                     borderRadius="lg"
-                    _hover={{ 
+                    _hover={{
                         bg: "transparent",
                         transform: "translateY(-1px)",
                         bgGradient: "linear(to-r, green.500, green.600)",
@@ -364,7 +391,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                 </Stat>
                             </CardBody>
                         </Card>
-                        
+
                         <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
                             <CardBody>
                                 <Stat>
@@ -376,7 +403,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                 </Stat>
                             </CardBody>
                         </Card>
-                        
+
                         <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
                             <CardBody>
                                 <Stat>
@@ -393,7 +420,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                     {/* Список завещаний */}
                     <VStack spacing={6} align="stretch">
                         {heirWills.map((will, index) => (
-                            <Card 
+                            <Card
                                 key={will.address}
                                 bg={cardBg}
                                 borderRadius="xl"
@@ -401,7 +428,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                 border="1px solid"
                                 borderColor={will.canClaim ? "green.200" : borderColor}
                                 transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-                                _hover={{ 
+                                _hover={{
                                     transform: "translateY(-2px)",
                                     boxShadow: "xl",
                                     borderColor: will.canClaim ? "green.400" : "#081781"
@@ -421,11 +448,11 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                             </VStack>
                                         </HStack>
                                         <VStack spacing={2} align="end">
-                                            <Badge 
-                                                colorScheme={will.canClaim ? "green" : "orange"} 
-                                                variant="outline" 
-                                                fontSize="sm" 
-                                                px={3} 
+                                            <Badge
+                                                colorScheme={will.canClaim ? "green" : "orange"}
+                                                variant="outline"
+                                                fontSize="sm"
+                                                px={3}
                                                 py={1}
                                             >
                                                 Наследство #{index + 1}
@@ -438,7 +465,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                         </VStack>
                                     </HStack>
                                 </CardHeader>
-                                
+
                                 <CardBody pt={2}>
                                     <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
                                         {/* Финансовая информация */}
@@ -467,21 +494,31 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                             <HStack>
                                                 <Icon as={FaClock} color="gray.500" />
                                                 <Text fontSize="sm" fontWeight="semibold" color={textColor}>
-                                                    Частота выплат
+                                                    Настройки времени
                                                 </Text>
                                             </HStack>
-                                            <VStack align="start" spacing={2}>
-                                                <Badge colorScheme="orange" variant="subtle" borderRadius="md">
-                                                    {formatTime(Number(will.transferFrequency))}
-                                                </Badge>
-                                                <Badge 
-                                                    colorScheme={will.canClaim ? "green" : "red"} 
-                                                    variant="subtle" 
-                                                    borderRadius="md"
-                                                    fontSize="xs"
-                                                >
-                                                    {formatNextClaimTime(will.nextClaimTime)}
-                                                </Badge>
+                                            <VStack align="start" spacing={1}>
+                                                <Text fontSize="sm">
+                                                    <strong>Частота выплат:</strong>{" "}
+                                                    <Badge colorScheme="orange" variant="subtle" borderRadius="md">
+                                                        {formatTime(Number(will.transferFrequency))}
+                                                    </Badge>
+                                                </Text>
+                                                <Text fontSize="sm">
+                                                    <strong>Период ожидания:</strong>{" "}
+                                                    <Badge colorScheme="purple" variant="subtle" borderRadius="md">
+                                                        {formatTime(Number(will.waitingPeriod))}
+                                                    </Badge>
+                                                </Text>
+                                                <Text fontSize="sm">
+                                                    <strong>Последняя активность:</strong>{" "}
+                                                    <Badge colorScheme="blue" variant="subtle" borderRadius="md">
+                                                        {new Date(Number(will.ownerLastActivity) * 1000).toLocaleString()}
+                                                    </Badge>
+                                                </Text>
+                                                <Text fontSize="xs" color={textColor}>
+                                                    Следующая возможность: {formatNextClaimTime(will.nextClaimTime, will.ownerLastActivity, will.waitingPeriod)}
+                                                </Text>
                                             </VStack>
                                         </VStack>
 
@@ -501,7 +538,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                                 colorScheme="green"
                                                 size="sm"
                                                 leftIcon={<Icon as={FaGift} />}
-                                                _hover={{ 
+                                                _hover={{
                                                     transform: will.canClaim ? "translateY(-1px)" : "none",
                                                     boxShadow: will.canClaim ? "md" : "none"
                                                 }}
@@ -510,9 +547,9 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                             </Button>
                                         </VStack>
                                     </SimpleGrid>
-                                    
+
                                     <Divider my={4} />
-                                    
+
                                     <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="lg">
                                         <Text fontSize="xs" color={textColor} fontFamily="monospace">
                                             <strong>Адрес контракта:</strong> {will.address}
@@ -536,4 +573,4 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
     );
 });
 
-export default HeirWills; 
+export default HeirWills;
