@@ -27,7 +27,7 @@ const CONFIG = {
     // API-ключ Arbiscan - замените на свой реальный ключ
     ARBISCAN_API_KEY: "EER1P87Y4I6R4JT9K3KYRWTVWET72VGH5V",
     // Адрес новой фабрики смарт-контрактов с исправлениями безопасности
-    FACTORY_ADDRESS: "0xE7BdcF4EDA5ecf11d2b9E1dB195d0B21a6b1D7bb"
+    FACTORY_ADDRESS: "0x48D5CbBa0c6A47D2d6a8952b85826c3E0ba82ba3"
 };
 
 function App() {
@@ -49,7 +49,7 @@ function App() {
         setSigner(signer);
         setAccount(address);
     };
-    
+
     // Автоматически подключаемся к кошельку при загрузке страницы
     useEffect(() => {
         const autoConnect = async () => {
@@ -58,11 +58,11 @@ function App() {
                 console.log("MetaMask не установлен");
                 return;
             }
-            
+
             try {
                 // Проверяем, есть ли уже подключенные аккаунты
                 const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                
+
                 if (accounts && accounts.length > 0) {
                     console.log("Автоматическое подключение к MetaMask");
                     connect();
@@ -73,13 +73,13 @@ function App() {
                 console.error("Ошибка при автоматическом подключении:", error);
             }
         };
-        
+
         autoConnect();
-        
+
         // Добавляем обработчики событий MetaMask
         const setupEventListeners = () => {
             if (!window.ethereum) return;
-            
+
             // Обработка события смены аккаунта
             window.ethereum.on('accountsChanged', (accounts: string[]) => {
                 if (accounts.length === 0) {
@@ -94,13 +94,13 @@ function App() {
                     connect();
                 }
             });
-            
+
             // Обработка события смены сети
             window.ethereum.on('chainChanged', () => {
                 console.log("Сеть изменена, обновляем подключение");
                 connect();
             });
-            
+
             // Обработка события отключения
             window.ethereum.on('disconnect', () => {
                 console.log("Кошелек отключен");
@@ -109,9 +109,9 @@ function App() {
                 setProvider(null);
             });
         };
-        
+
         setupEventListeners();
-        
+
         // Очистка обработчиков при размонтировании компонента
         return () => {
             if (window.ethereum) {
@@ -119,7 +119,7 @@ function App() {
             }
         };
     }, []);
-    
+
     // Проверяем сеть при подключении
     useEffect(() => {
         const checkNetwork = async () => {
@@ -134,15 +134,15 @@ function App() {
                 console.error("Ошибка при получении информации о сети:", err);
             }
         };
-        
+
         checkNetwork();
     }, [provider]);
-    
+
     // Обработчик события создания завещания
     const handleWillCreated = () => {
         // Переключаемся на вкладку "Мои завещания"
         setActiveTab("myWills");
-        
+
         // Даем небольшую задержку для переключения вкладки
         setTimeout(() => {
             // Если есть ссылка на компонент MyWills, вызываем обновление
@@ -166,9 +166,9 @@ function App() {
     return (
         <Box bg={useColorModeValue('gray.50', 'gray.900')} minH="100vh">
             {/* Современный хедер */}
-            <Box 
+            <Box
                 bgGradient={bgGradient}
-                py={6} 
+                py={6}
                 px={6}
                 boxShadow="xl"
                 position="relative"
@@ -195,7 +195,7 @@ function App() {
                     bg="whiteAlpha.50"
                     filter="blur(80px)"
                 />
-                
+
                 <Container maxW="container.lg" position="relative" zIndex={1}>
                     <Flex justifyContent="space-between" alignItems="center">
                         <HStack spacing={4}>
@@ -209,7 +209,7 @@ function App() {
                                 </Text>
                             </VStack>
                         </HStack>
-                        
+
                         <HStack spacing={4}>
                             {account && (
                                 <VStack align="end" spacing={1}>
@@ -219,9 +219,9 @@ function App() {
                                             {`${account.slice(0, 6)}...${account.slice(-4)}`}
                                         </Text>
                                     </HStack>
-                                    <Badge 
-                                        colorScheme="blue" 
-                                        variant="solid" 
+                                    <Badge
+                                        colorScheme="blue"
+                                        variant="solid"
                                         fontSize="xs"
                                         bg="blue.100"
                                         color="blue.800"
@@ -237,14 +237,14 @@ function App() {
                     </Flex>
                 </Container>
             </Box>
-            
+
             <Container py={12} maxW="container.lg">
                 <VStack spacing={8}>
                     {!isCorrectNetwork && network && (
-                        <Alert 
-                            status="warning" 
-                            borderRadius="xl" 
-                            boxShadow="lg" 
+                        <Alert
+                            status="warning"
+                            borderRadius="xl"
+                            boxShadow="lg"
                             variant="modern"
                             bg={cardBg}
                         >
@@ -252,13 +252,13 @@ function App() {
                             <Box>
                                 <AlertTitle>Неверная сеть!</AlertTitle>
                                 <AlertDescription>
-                                    Вы подключены к сети {network.name || `Chain ID: ${network.chainId}`}. 
+                                    Вы подключены к сети {network.name || `Chain ID: ${network.chainId}`}.
                                     Пожалуйста, переключитесь на Arbitrum Sepolia в вашем кошельке.
                                 </AlertDescription>
                             </Box>
                         </Alert>
                     )}
-                    
+
                     {!account ? (
                         <Box textAlign="center" py={16}>
                             <VStack spacing={8}>
@@ -268,11 +268,11 @@ function App() {
                                         Управляйте своими цифровыми активами
                                     </Heading>
                                     <Text fontSize="xl" color={textColor} maxW="700px" lineHeight="tall">
-                                        SmartWill помогает создавать умные завещания на блокчейне, 
+                                        SmartWill помогает создавать умные завещания на блокчейне,
                                         обеспечивая безопасную передачу ваших криптоактивов наследникам.
                                     </Text>
                                 </VStack>
-                                
+
                                 {/* Преимущества */}
                                 <HStack spacing={8} pt={8}>
                                     <VStack spacing={2}>
@@ -297,20 +297,20 @@ function App() {
                                         </Text>
                                     </VStack>
                                 </HStack>
-                                
-                                <Button 
-                                    onClick={connect} 
-                                    size="xl" 
-                                    colorScheme="purple" 
+
+                                <Button
+                                    onClick={connect}
+                                    size="xl"
+                                    colorScheme="purple"
                                     px={12}
                                     py={6}
                                     fontSize="lg"
                                     leftIcon={<FaWallet />}
                                     bgGradient="linear(to-r, #081781, #061264)"
-                                    _hover={{ 
+                                    _hover={{
                                         bgGradient: "linear(to-r, #061264, #040d47)",
-                                        transform: "translateY(-2px)", 
-                                        boxShadow: "xl" 
+                                        transform: "translateY(-2px)",
+                                        boxShadow: "xl"
                                     }}
                                     _active={{ transform: "translateY(0)" }}
                                     transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
@@ -323,17 +323,17 @@ function App() {
                     ) : (
                         <>
                             {/* Навигационные кнопки */}
-                            <Box 
+                            <Box
                                 bg={cardBg}
-                                borderRadius="xl" 
-                                p={2} 
+                                borderRadius="xl"
+                                p={2}
                                 boxShadow="lg"
                                 width="100%"
                                 maxW="800px"
                             >
                                 <HStack spacing={2}>
-                                    <Button 
-                                        onClick={() => setActiveTab("create")} 
+                                    <Button
+                                        onClick={() => setActiveTab("create")}
                                         colorScheme={activeTab === "create" ? "purple" : "gray"}
                                         variant={activeTab === "create" ? "solid" : "ghost"}
                                         flex={1}
@@ -341,7 +341,7 @@ function App() {
                                         borderRadius="lg"
                                         leftIcon={<Icon as={FaFileContract} />}
                                         bgGradient={activeTab === "create" ? "linear(to-r, #081781, #061264)" : undefined}
-                                        _hover={{ 
+                                        _hover={{
                                             transform: activeTab === "create" ? "none" : "translateY(-1px)",
                                             bg: activeTab === "create" ? undefined : useColorModeValue('gray.100', 'gray.700'),
                                             bgGradient: activeTab === "create" ? "linear(to-r, #061264, #040d47)" : undefined
@@ -350,8 +350,8 @@ function App() {
                                     >
                                         Создать завещание
                                     </Button>
-                                    <Button 
-                                        onClick={() => setActiveTab("myWills")} 
+                                    <Button
+                                        onClick={() => setActiveTab("myWills")}
                                         colorScheme={activeTab === "myWills" ? "purple" : "gray"}
                                         variant={activeTab === "myWills" ? "solid" : "ghost"}
                                         flex={1}
@@ -359,7 +359,7 @@ function App() {
                                         borderRadius="lg"
                                         leftIcon={<Icon as={FaWallet} />}
                                         bgGradient={activeTab === "myWills" ? "linear(to-r, #081781, #061264)" : undefined}
-                                        _hover={{ 
+                                        _hover={{
                                             transform: activeTab === "myWills" ? "none" : "translateY(-1px)",
                                             bg: activeTab === "myWills" ? undefined : useColorModeValue('gray.100', 'gray.700'),
                                             bgGradient: activeTab === "myWills" ? "linear(to-r, #061264, #040d47)" : undefined
@@ -368,8 +368,8 @@ function App() {
                                     >
                                         Мои завещания
                                     </Button>
-                                    <Button 
-                                        onClick={() => setActiveTab("heirWills")} 
+                                    <Button
+                                        onClick={() => setActiveTab("heirWills")}
                                         colorScheme={activeTab === "heirWills" ? "green" : "gray"}
                                         variant={activeTab === "heirWills" ? "solid" : "ghost"}
                                         flex={1}
@@ -377,7 +377,7 @@ function App() {
                                         borderRadius="lg"
                                         leftIcon={<Icon as={FaGift} />}
                                         bgGradient={activeTab === "heirWills" ? "linear(to-r, green.500, green.600)" : undefined}
-                                        _hover={{ 
+                                        _hover={{
                                             transform: activeTab === "heirWills" ? "none" : "translateY(-1px)",
                                             bg: activeTab === "heirWills" ? undefined : useColorModeValue('gray.100', 'gray.700'),
                                             bgGradient: activeTab === "heirWills" ? "linear(to-r, green.600, green.700)" : undefined
@@ -388,11 +388,11 @@ function App() {
                                     </Button>
                                 </HStack>
                             </Box>
-                            
+
                             {/* Основной контент */}
-                            <Box 
-                                p={8} 
-                                borderRadius="xl" 
+                            <Box
+                                p={8}
+                                borderRadius="xl"
                                 bg={cardBg}
                                 boxShadow="xl"
                                 width="100%"
@@ -400,22 +400,22 @@ function App() {
                                 borderColor={useColorModeValue('gray.200', 'gray.700')}
                             >
                                 {activeTab === "create" && (
-                                    <CreateWillForm 
-                                        signer={signer!} 
+                                    <CreateWillForm
+                                        signer={signer!}
                                         onWillCreated={handleWillCreated}
-                                        factoryAddress={CONFIG.FACTORY_ADDRESS} 
+                                        factoryAddress={CONFIG.FACTORY_ADDRESS}
                                     />
                                 )}
                                 {activeTab === "myWills" && (
-                                    <MyWills 
-                                        signer={signer!} 
+                                    <MyWills
+                                        signer={signer!}
                                         ref={myWillsRef}
                                         factoryAddress={CONFIG.FACTORY_ADDRESS}
                                     />
                                 )}
                                 {activeTab === "heirWills" && (
-                                    <HeirWills 
-                                        signer={signer!} 
+                                    <HeirWills
+                                        signer={signer!}
                                         ref={heirWillsRef}
                                         factoryAddress={CONFIG.FACTORY_ADDRESS}
                                     />
