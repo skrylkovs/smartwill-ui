@@ -108,7 +108,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             }
             
             // Добавляем gas limit для решения проблемы с estimateGas
-            const gasLimit = ethers.toBigInt(1000000); // Увеличенный gas limit
+            const gasLimit = ethers.toBigInt(1200000); // Увеличенный gas limit для новых методов безопасности
             
             // Логируем параметры для отладки
             console.log("🔧 Параметры для createSmartWill:");
