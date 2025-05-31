@@ -56,12 +56,13 @@ export interface HeirWillInfo {
 const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) => {
     const [heirWills, setHeirWills] = useState<HeirWillInfo[]>([]);
     const [loading, setLoading] = useState(false);
+    const [loadingProgress, setLoadingProgress] = useState<{current: number, total: number}>({current: 0, total: 0});
     const [claimingWill, setClaimingWill] = useState<string | null>(null);
     const toast = useToast();
 
     const cardBg = useColorModeValue('white', 'gray.800');
-    const textColor = useColorModeValue('gray.600', 'gray.300');
-    const borderColor = useColorModeValue('gray.200', 'gray.600');
+    const textColor = useColorModeValue('gray.800', 'white');
+    const borderColor = useColorModeValue('gray.200', 'gray.700');
 
     // Функция для форматирования времени в секундах в читаемый формат
     const formatTime = (seconds: number): string => {
@@ -117,42 +118,107 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
 
             const willContract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
 
-            // Параллельные запросы для оптимизации
-            const [
-                balance,
-                heir,
-                heirName,
-                heirRole,
-                transferAmount,
-                transferFrequency,
-                waitingPeriod,
-                ownerLastActivity,
-                limit,
-                ownerAddress,
-                canTransferNow,
-                nextTransferTime
-            ] = await Promise.all([
-                willContract.getBalance(),
-                willContract.heir(),
-                willContract.heirName(),
-                willContract.heirRole(),
-                willContract.transferAmount(),
-                willContract.transferFrequency(),
-                willContract.willActivateWaitingPeriod(),
-                willContract.getOwnerLastActivity(),
-                willContract.limit(),
-                willContract.owner(),
-                willContract.canTransferNow(),
-                willContract.getNextTransferTime()
-            ]);
+            // Последовательные вызовы с индивидуальной обработкой ошибок
+            let balance, heir, heirName, heirRole, transferAmount, transferFrequency;
+            let waitingPeriod, ownerLastActivity, limit, ownerAddress, canTransferNow, nextTransferTime;
 
-            console.log(`✅ Завещание ${willAddress}: heir=${heir}, user=${userAddress}, canTransfer=${canTransferNow}`);
+            try {
+                balance = await willContract.getBalance();
+            } catch (error) {
+                console.error(`Ошибка получения баланса для ${willAddress}:`, error);
+                return null;
+            }
+
+            try {
+                heir = await willContract.heir();
+            } catch (error) {
+                console.error(`Ошибка получения наследника для ${willAddress}:`, error);
+                return null;
+            }
 
             // Проверяем, является ли пользователь наследником
             if (heir.toLowerCase() !== userAddress.toLowerCase()) {
                 console.log(`❌ Пользователь не является наследником завещания ${willAddress}`);
                 return null;
             }
+
+            try {
+                heirName = await willContract.heirName();
+            } catch (error) {
+                console.warn(`Предупреждение: не удалось получить имя наследника для ${willAddress}:`, error);
+                heirName = "Не указано";
+            }
+
+            try {
+                heirRole = await willContract.heirRole();
+            } catch (error) {
+                console.warn(`Предупреждение: не удалось получить роль наследника для ${willAddress}:`, error);
+                heirRole = "Не указано";
+            }
+
+            try {
+                transferAmount = await willContract.transferAmount();
+            } catch (error) {
+                console.error(`Ошибка получения суммы перевода для ${willAddress}:`, error);
+                return null;
+            }
+
+            try {
+                transferFrequency = await willContract.transferFrequency();
+            } catch (error) {
+                console.warn(`Предупреждение: не удалось получить частоту переводов для ${willAddress}:`, error);
+                transferFrequency = BigInt(0);
+            }
+
+            try {
+                waitingPeriod = await willContract.willActivateWaitingPeriod();
+            } catch (error) {
+                console.warn(`Предупреждение: не удалось получить период ожидания для ${willAddress}:`, error);
+                waitingPeriod = BigInt(0);
+            }
+
+            try {
+                ownerLastActivity = await willContract.getOwnerLastActivity();
+            } catch (error) {
+                console.warn(`Предупреждение: не удалось получить последнюю активность владельца для ${willAddress}:`, error);
+                ownerLastActivity = BigInt(0);
+            }
+
+            try {
+                limit = await willContract.limit();
+            } catch (error) {
+                console.warn(`Предупреждение: не удалось получить лимит для ${willAddress}:`, error);
+                limit = BigInt(0);
+            }
+
+            try {
+                ownerAddress = await willContract.owner();
+            } catch (error) {
+                console.warn(`Предупреждение: не удалось получить адрес владельца для ${willAddress}:`, error);
+                ownerAddress = "0x0000000000000000000000000000000000000000";
+            }
+
+            try {
+                canTransferNow = await willContract.canTransferNow();
+            } catch (error) {
+                console.warn(`Предупреждение: не удалось проверить возможность перевода для ${willAddress}:`, error);
+                canTransferNow = false;
+            }
+
+            try {
+                nextTransferTime = await willContract.getNextTransferTime();
+            } catch (error) {
+                console.warn(`Предупреждение: не удалось получить время следующего перевода для ${willAddress}:`, error);
+                // Попробуем альтернативный метод
+                try {
+                    nextTransferTime = await willContract.getNextPossibleTransferTime();
+                } catch (altError) {
+                    console.warn(`Альтернативный метод тоже недоступен для ${willAddress}:`, altError);
+                    nextTransferTime = BigInt(0);
+                }
+            }
+
+            console.log(`✅ Завещание ${willAddress}: heir=${heir}, user=${userAddress}, canTransfer=${canTransferNow}`);
 
             // Проверяем, может ли наследник получить средства сейчас
             const hasEnoughBalance = balance >= transferAmount;
@@ -185,6 +251,8 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
     const loadHeirWills = async () => {
         try {
             setLoading(true);
+            setLoadingProgress({current: 0, total: 0});
+
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
             const userAddress = await signer.getAddress();
 
@@ -211,22 +279,37 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
             }
 
             console.log("Проверяем завещания для наследника:", willsList.length);
+            setLoadingProgress({current: 0, total: willsList.length});
 
             if (willsList.length === 0) {
                 setHeirWills([]);
                 return;
             }
 
-            // Проверяем каждое завещание на предмет того, является ли пользователь наследником
-            const heirWillsData = await Promise.all(
-                willsList.map((address: string) => fetchHeirWillInfo(address, userAddress))
-            );
+            // Последовательно проверяем каждое завещание чтобы избежать RPC перегрузки
+            const validHeirWills: HeirWillInfo[] = [];
 
-            // Фильтруем только те завещания, где пользователь является наследником
-            const validHeirWills = heirWillsData.filter(Boolean) as HeirWillInfo[];
+            for (let i = 0; i < willsList.length; i++) {
+                const address = willsList[i];
+                setLoadingProgress({current: i + 1, total: willsList.length});
+
+                try {
+                    const willInfo = await fetchHeirWillInfo(address, userAddress);
+                    if (willInfo) {
+                        validHeirWills.push(willInfo);
+                    }
+                } catch (error) {
+                    console.warn(`Пропускаем завещание ${address} из-за ошибки:`, error);
+                    continue;
+                }
+
+                // Небольшая пауза между запросами чтобы не перегружать RPC
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
             console.log("Найдено завещаний для наследника:", validHeirWills.length);
-
             setHeirWills(validHeirWills);
+
         } catch (error) {
             console.error("Ошибка при загрузке завещаний наследника:", error);
             toast({
@@ -238,6 +321,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
             });
         } finally {
             setLoading(false);
+            setLoadingProgress({current: 0, total: 0});
         }
     };
 
@@ -359,9 +443,16 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                 <Center p={16}>
                     <VStack spacing={6}>
                         <Spinner size="xl" color="green.500" thickness="4px" speed="0.8s" />
-                        <Text fontSize="lg" color={textColor} fontWeight="medium">
-                            Поиск завещаний...
-                        </Text>
+                        <VStack spacing={2}>
+                            <Text fontSize="lg" color={textColor} fontWeight="medium">
+                                Поиск завещаний...
+                            </Text>
+                            {loadingProgress.total > 0 && (
+                                <Text fontSize="sm" color="gray.500">
+                                    Проверено {loadingProgress.current} из {loadingProgress.total} завещаний
+                                </Text>
+                            )}
+                        </VStack>
                     </VStack>
                 </Center>
             ) : heirWills.length === 0 ? (
