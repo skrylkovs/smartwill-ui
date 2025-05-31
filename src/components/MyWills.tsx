@@ -47,6 +47,7 @@ export interface WillInfo {
     heirRole: string;
     transferAmount: string;
     transferFrequency: string;
+    waitingPeriod: string;
     limit: string;
 }
 
@@ -79,15 +80,16 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const fetchWillInfo = async (willAddress: string, retryCount = 3, delayMs = 1000) => {
         try {
             const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
-            
+
             // Получаем основную информацию из контракта завещания
-            const [balance, heir, heirName, heirRole, transferAmount, transferFrequency, limit] = await Promise.all([
+            const [balance, heir, heirName, heirRole, transferAmount, transferFrequency, waitingPeriod, limit] = await Promise.all([
                 contract.getBalance(),
                 contract.heir(),
                 contract.heirName(),
                 contract.heirRole(),
                 contract.transferAmount(),
                 contract.transferFrequency(),
+                contract.willActivateWaitingPeriod(),
                 contract.limit()
             ]);
 
@@ -99,22 +101,23 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 heirRole,
                 transferAmount: ethers.formatEther(transferAmount),
                 transferFrequency: transferFrequency.toString(),
+                waitingPeriod: waitingPeriod.toString(),
                 limit: ethers.formatEther(limit)
             };
         } catch (error) {
             console.error(`Ошибка при получении информации о завещании ${willAddress}:`, error);
-            
+
             // Если у нас остались попытки, ждем и пробуем снова
             if (retryCount > 0) {
                 console.log(`Повторная попытка (осталось ${retryCount}) для контракта ${willAddress} через ${delayMs}мс...`);
-                
+
                 // Ожидаем указанное время
                 await new Promise(resolve => setTimeout(resolve, delayMs));
-                
+
                 // Рекурсивно вызываем функцию с уменьшенным счетчиком попыток
                 return fetchWillInfo(willAddress, retryCount - 1, delayMs * 1.5);
             }
-            
+
             // Возвращаем базовую информацию, когда закончились попытки
             return {
                 address: willAddress,
@@ -124,6 +127,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 heirRole: "Загрузка...",
                 transferAmount: "Загрузка...",
                 transferFrequency: "Загрузка...",
+                waitingPeriod: "Загрузка...",
                 limit: "Загрузка..."
             };
         }
@@ -133,16 +137,16 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const fetchLastPing = async () => {
         try {
             if (!signer) return;
-            
+
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
             const signerAddress = await signer.getAddress();
-            
+
             // Пробуем получить последний пинг разными способами
             try {
                 // Сначала пробуем вызвать getLastPing()
                 try {
                     const lastPingTimestamp = await factory.getLastPing();
-                    
+
                     if (lastPingTimestamp > 0) {
                         setLastPing(new Date(Number(lastPingTimestamp) * 1000).toLocaleString());
                         return;
@@ -150,11 +154,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 } catch (error) {
                     console.error("Не удалось получить lastPing через getLastPing():", error);
                 }
-                
+
                 // Затем пробуем получить через отображение lastPings
                 try {
                     const lastPingTimestamp = await factory.lastPings(signerAddress);
-                    
+
                     if (lastPingTimestamp > 0) {
                         setLastPing(new Date(Number(lastPingTimestamp) * 1000).toLocaleString());
                         return;
@@ -162,11 +166,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 } catch (error) {
                     console.error("Не удалось получить lastPing через lastPings:", error);
                 }
-                
+
                 // Пробуем через getLastPingOf, если он реализован
                 try {
                     const lastPingTimestamp = await factory.getLastPingOf(signerAddress);
-                    
+
                     if (lastPingTimestamp > 0) {
                         setLastPing(new Date(Number(lastPingTimestamp) * 1000).toLocaleString());
                         return;
@@ -174,7 +178,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 } catch (error) {
                     console.error("Не удалось получить lastPing через getLastPingOf:", error);
                 }
-                
+
                 setLastPing("Нет данных о последнем пинге");
             } catch (error) {
                 console.error("Все методы получения lastPing не сработали:", error);
@@ -236,11 +240,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             setLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
             const userAddress = await signer.getAddress();
-            
+
             console.log("🔍 Диагностика загрузки завещаний:");
             console.log("👤 Адрес пользователя:", userAddress);
             console.log("🏭 Адрес фабрики:", factoryAddress);
-            
+
             // Получаем только завещания текущего пользователя (безопасно)
             let willsList = [];
             try {
@@ -253,13 +257,13 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 // Если новый метод недоступен, возвращаем пустой массив
                 willsList = [];
             }
-            
+
             // Дополнительная диагностика: проверяем общее количество завещаний
             try {
                 const allWills = await factory.getDeployedWills();
                 console.log("📊 Всего завещаний в фабрике:", allWills.length);
                 console.log("🔗 Адреса всех завещаний:", allWills);
-                
+
                 // Проверяем mapping для текущего пользователя
                 try {
                     const userWillsFromMapping = await factory.ownerToWills(userAddress, 0);
@@ -270,27 +274,27 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             } catch (debugError) {
                 console.error("⚠️ Ошибка при получении отладочной информации:", debugError);
             }
-            
+
             // Если список завещаний пуст, завершаем работу
             if (willsList.length === 0) {
                 console.log("❌ Завещания не найдены для текущего пользователя");
                 setWills([]);
                 return;
             }
-            
+
             // Добавляем небольшую задержку перед запросом информации о завещаниях,
             // чтобы дать блокчейну время на обработку транзакций
             await new Promise(resolve => setTimeout(resolve, 1000));
-            
+
             // Получаем информацию о каждом завещании
             const willsInfo = await Promise.all(
                 willsList.map((address: string) => fetchWillInfo(address))
             );
-            
+
             // Теперь отображаем только завещания текущего пользователя
             const validWills = willsInfo.filter(Boolean) as WillInfo[];
             console.log("✅ Валидных завещаний пользователя:", validWills.length);
-            
+
             setWills(validWills);
 
             // Получаем информацию о последнем пинге
@@ -344,7 +348,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
         <VStack spacing={8} align="stretch" w="100%">
             {/* Диагностическая информация */}
             <DiagnosticInfo signer={signer} factoryAddress={factoryAddress} />
-            
+
             {/* Заголовок с кнопкой обновления */}
             <Flex justifyContent="space-between" alignItems="center">
                 <HStack spacing={3}>
@@ -353,9 +357,9 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                         Мои завещания
                     </Heading>
                 </HStack>
-                <Button 
-                    size="md" 
-                    onClick={refreshWills} 
+                <Button
+                    size="md"
+                    onClick={refreshWills}
                     leftIcon={<Icon as={RepeatIcon} />}
                     isLoading={loading}
                     colorScheme="purple"
@@ -363,7 +367,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                     borderRadius="lg"
                     borderColor="#081781"
                     color="#081781"
-                    _hover={{ 
+                    _hover={{
                         bg: "transparent",
                         transform: "translateY(-1px)",
                         bgGradient: "linear(to-r, #081781, #061264)",
@@ -412,7 +416,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                 </Stat>
                             </CardBody>
                         </Card>
-                        
+
                         <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
                             <CardBody>
                                 <Stat>
@@ -424,7 +428,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                 </Stat>
                             </CardBody>
                         </Card>
-                        
+
                         <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
                             <CardBody>
                                 <Stat>
@@ -441,7 +445,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                     {/* Список завещаний */}
                     <VStack spacing={6} align="stretch">
                         {wills.map((will, index) => (
-                            <Card 
+                            <Card
                                 key={will.address}
                                 bg={cardBg}
                                 borderRadius="xl"
@@ -449,7 +453,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                 border="1px solid"
                                 borderColor={borderColor}
                                 transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-                                _hover={{ 
+                                _hover={{
                                     transform: "translateY(-2px)",
                                     boxShadow: "xl",
                                     borderColor: "#081781"
@@ -473,7 +477,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                         </Badge>
                                     </HStack>
                                 </CardHeader>
-                                
+
                                 <CardBody pt={2}>
                                     <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
                                         {/* Информация о наследнике */}
@@ -515,17 +519,28 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                             <HStack>
                                                 <Icon as={FaClock} color="gray.500" />
                                                 <Text fontSize="sm" fontWeight="semibold" color={textColor}>
-                                                    Частота выплат
+                                                    Временные настройки
                                                 </Text>
                                             </HStack>
-                                            <Badge colorScheme="orange" variant="subtle" borderRadius="md">
-                                                {formatTime(Number(will.transferFrequency))}
-                                            </Badge>
+                                            <VStack align="start" spacing={1}>
+                                                <Text fontSize="sm">
+                                                    <strong>Частота выплат:</strong>{" "}
+                                                    <Badge colorScheme="orange" variant="subtle" borderRadius="md">
+                                                        {formatTime(Number(will.transferFrequency))}
+                                                    </Badge>
+                                                </Text>
+                                                <Text fontSize="sm">
+                                                    <strong>Период ожидания:</strong>{" "}
+                                                    <Badge colorScheme="purple" variant="subtle" borderRadius="md">
+                                                        {formatTime(Number(will.waitingPeriod))}
+                                                    </Badge>
+                                                </Text>
+                                            </VStack>
                                         </VStack>
                                     </SimpleGrid>
-                                    
+
                                     <Divider my={4} />
-                                    
+
                                     <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="lg">
                                         <Text fontSize="xs" color={textColor} fontFamily="monospace">
                                             <strong>Адрес контракта:</strong> {will.address}
@@ -535,11 +550,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                             </Card>
                         ))}
                     </VStack>
-                    
+
                     {/* Кнопка подтверждения жизни */}
-                    <Card 
+                    <Card
                         bg={useColorModeValue('blue.50', 'blue.900')}
-                        borderRadius="xl" 
+                        borderRadius="xl"
                         border="2px solid"
                         borderColor="blue.200"
                         boxShadow="lg"
@@ -557,8 +572,8 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                         Регулярно подтверждайте свою активность, чтобы завещания оставались под вашим контролем
                                     </Text>
                                 </VStack>
-                                
-                                <Button 
+
+                                <Button
                                     onClick={handlePingAll}
                                     colorScheme="blue"
                                     size="lg"
@@ -572,10 +587,10 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                     leftIcon={<Icon as={FaHeartbeat} />}
                                     bgGradient="linear(to-r, #081781, #061264)"
                                     color="white"
-                                    _hover={{ 
+                                    _hover={{
                                         bgGradient: "linear(to-r, #061264, #040d47)",
-                                        transform: "translateY(-2px)", 
-                                        boxShadow: "xl" 
+                                        transform: "translateY(-2px)",
+                                        boxShadow: "xl"
                                     }}
                                     _active={{ transform: "translateY(0)" }}
                                     transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
@@ -583,7 +598,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                 >
                                     Я жив и здоров!
                                 </Button>
-                                
+
                                 <Alert status="info" borderRadius="lg" variant="subtle">
                                     <AlertIcon />
                                     <AlertDescription fontSize="sm">
@@ -599,4 +614,4 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     );
 });
 
-export default MyWills; 
+export default MyWills;
