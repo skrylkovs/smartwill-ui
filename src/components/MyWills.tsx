@@ -206,19 +206,60 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             setPingLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
 
+            console.log("📤 Отправка ping...");
+
             // Отправляем один пинг в фабрику
-            await factory.ping();
+            const pingTx = await factory.ping();
+            console.log("⏳ Ожидаем подтверждения транзакции ping...");
+
+            // Ожидаем подтверждения транзакции
+            await pingTx.wait();
+            console.log("✅ Транзакция ping подтверждена:", pingTx.hash);
+
+            // Добавляем задержку для обновления состояния в блокчейне
+            console.log("⏳ Ожидаем обновления состояния в блокчейне...");
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Обновляем информацию о последнем пинге несколько раз для надежности
+            let pingUpdated = false;
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                console.log(`🔄 Попытка ${attempt} обновления информации о ping...`);
+                await fetchLastPing();
+
+                // Проверяем, обновилось ли время (примерно должно быть в пределах последних 5 минут)
+                const currentTime = new Date();
+                const fiveMinutesAgo = new Date(currentTime.getTime() - 5 * 60 * 1000);
+
+                // Если lastPing содержит "Нет данных" или "Ошибка", пробуем еще раз
+                if (!lastPing.includes("Нет данных") && !lastPing.includes("Ошибка")) {
+                    try {
+                        const lastPingDate = new Date(lastPing);
+                        if (lastPingDate > fiveMinutesAgo) {
+                            console.log("✅ Время ping успешно обновлено");
+                            pingUpdated = true;
+                            break;
+                        }
+                    } catch (dateError) {
+                        console.log("⚠️ Ошибка парсинга даты, пробуем снова...");
+                    }
+                }
+
+                if (attempt < 3) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+
+            if (!pingUpdated) {
+                console.log("⚠️ Время ping может быть не полностью обновлено, но операция выполнена");
+            }
 
             toast({
                 title: "Успешно!",
-                description: `Вы подтвердили, что живы.`,
+                description: `Вы подтвердили, что живы. Время обновлено.`,
                 status: "success",
                 duration: 5000,
                 isClosable: true,
             });
-
-            // Обновляем информацию о последнем пинге
-            await fetchLastPing();
 
         } catch (error) {
             console.error("Ошибка при отправке пинга:", error);
@@ -299,6 +340,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
 
             // Получаем информацию о последнем пинге
             await fetchLastPing();
+
+            // Дополнительное обновление через секунду для надежности
+            setTimeout(async () => {
+                await fetchLastPing();
+            }, 1000);
         } catch (error) {
             console.error("💥 Общая ошибка при загрузке завещаний:", error);
         } finally {

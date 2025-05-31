@@ -196,7 +196,7 @@ function App() {
                     filter="blur(80px)"
                 />
 
-                <Container maxW="container.lg" position="relative" zIndex={1}>
+                <Container maxW="container.xl" position="relative" zIndex={1}>
                     <Flex justifyContent="space-between" alignItems="center">
                         <HStack spacing={4}>
                             <Icon as={FaShieldAlt} boxSize={8} color="white" />
@@ -238,7 +238,7 @@ function App() {
                 </Container>
             </Box>
 
-            <Container py={12} maxW="container.lg">
+            <Container py={12} maxW="container.xl">
                 <VStack spacing={8}>
                     {!isCorrectNetwork && network && (
                         <Alert
@@ -329,7 +329,7 @@ function App() {
                                 p={2}
                                 boxShadow="lg"
                                 width="100%"
-                                maxW="800px"
+                                maxW="1200px"
                             >
                                 <HStack spacing={2}>
                                     <Button
