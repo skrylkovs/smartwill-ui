@@ -15,9 +15,12 @@ import {
     Flex,
     useColorModeValue,
     Badge,
-    Icon
+    Icon,
+    Switch,
+    FormControl,
+    FormLabel
 } from "@chakra-ui/react";
-import { FaWallet, FaFileContract, FaShieldAlt, FaGift } from "react-icons/fa";
+import { FaWallet, FaFileContract, FaShieldAlt, FaGift, FaUserTie, FaHeart } from "react-icons/fa";
 import CreateWillForm from "./components/CreateWillForm";
 import MyWills from "./components/MyWills";
 import HeirWills from "./components/HeirWills";
@@ -30,14 +33,54 @@ const CONFIG = {
     FACTORY_ADDRESS: "0x48D5CbBa0c6A47D2d6a8952b85826c3E0ba82ba3"
 };
 
+// Типы режимов приложения
+type AppMode = "testator" | "heir";
+
 function App() {
     const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
     const [signer, setSigner] = useState<ethers.Signer | null>(null);
     const [account, setAccount] = useState<string>("");
     const [activeTab, setActiveTab] = useState<"create" | "myWills" | "heirWills">("myWills");
     const [network, setNetwork] = useState<{ chainId: number; name: string } | null>(null);
+    const [appMode, setAppMode] = useState<AppMode>("testator");
     const myWillsRef = useRef<any>(null);
     const heirWillsRef = useRef<any>(null);
+
+    // Загрузка режима приложения из localStorage при инициализации
+    useEffect(() => {
+        const savedMode = localStorage.getItem('smartwill-app-mode') as AppMode;
+        if (savedMode && (savedMode === "testator" || savedMode === "heir")) {
+            setAppMode(savedMode);
+            // Если режим наследника, автоматически переключаемся на соответствующую вкладку
+            if (savedMode === "heir") {
+                setActiveTab("heirWills");
+            } else {
+                setActiveTab("myWills");
+            }
+        }
+    }, []);
+
+    // Автоматическая коррекция вкладки при смене режима
+    useEffect(() => {
+        if (appMode === "heir" && activeTab !== "heirWills") {
+            setActiveTab("heirWills");
+        } else if (appMode === "testator" && activeTab === "heirWills") {
+            setActiveTab("myWills");
+        }
+    }, [appMode, activeTab]);
+
+    // Сохранение режима приложения в localStorage при изменении
+    const handleModeChange = (newMode: AppMode) => {
+        setAppMode(newMode);
+        localStorage.setItem('smartwill-app-mode', newMode);
+
+        // Автоматически переключаем вкладку в зависимости от режима
+        if (newMode === "heir") {
+            setActiveTab("heirWills");
+        } else {
+            setActiveTab("myWills");
+        }
+    };
 
     // Функция для подключения к кошельку
     const connect = async () => {
@@ -140,7 +183,12 @@ function App() {
 
     // Обработчик события создания завещания
     const handleWillCreated = () => {
-        // Переключаемся на вкладку "Мои завещания"
+        // Убеждаемся, что мы в режиме завещателя и переключаемся на вкладку "Мои завещания"
+        if (appMode !== "testator") {
+            setAppMode("testator");
+            localStorage.setItem('smartwill-app-mode', "testator");
+        }
+
         setActiveTab("myWills");
 
         // Даем небольшую задержку для переключения вкладки
@@ -205,10 +253,69 @@ function App() {
                                     SmartWill
                                 </Heading>
                                 <Text fontSize="sm" color="whiteAlpha.800">
-                                    Цифровое наследство на блокчейне
+                                    {account ?
+                                        (appMode === "testator" ?
+                                            "Создавайте и управляйте завещаниями" :
+                                            "Проверяйте доступное наследство"
+                                        ) :
+                                        "Цифровое наследство на блокчейне"
+                                    }
                                 </Text>
                             </VStack>
                         </HStack>
+
+                        {/* Переключатель режимов (показываем только при подключенном кошельке) */}
+                        {account && (
+                            <VStack spacing={2}>
+                                <FormControl display="flex" alignItems="center" justifyContent="center">
+                                    <HStack spacing={3}>
+                                        <HStack>
+                                            <Icon as={FaUserTie} color={appMode === "testator" ? "white" : "whiteAlpha.600"} />
+                                            <FormLabel
+                                                htmlFor="mode-switch"
+                                                mb={0}
+                                                fontSize="sm"
+                                                color={appMode === "testator" ? "white" : "whiteAlpha.600"}
+                                                fontWeight={appMode === "testator" ? "bold" : "normal"}
+                                            >
+                                                Завещатель
+                                            </FormLabel>
+                                        </HStack>
+                                        <Switch
+                                            id="mode-switch"
+                                            colorScheme="orange"
+                                            isChecked={appMode === "heir"}
+                                            onChange={(e) => handleModeChange(e.target.checked ? "heir" : "testator")}
+                                            size="lg"
+                                        />
+                                        <HStack>
+                                            <FormLabel
+                                                htmlFor="mode-switch"
+                                                mb={0}
+                                                fontSize="sm"
+                                                color={appMode === "heir" ? "white" : "whiteAlpha.600"}
+                                                fontWeight={appMode === "heir" ? "bold" : "normal"}
+                                            >
+                                                Наследник
+                                            </FormLabel>
+                                            <Icon as={FaHeart} color={appMode === "heir" ? "white" : "whiteAlpha.600"} />
+                                        </HStack>
+                                    </HStack>
+                                </FormControl>
+                                <Badge
+                                    colorScheme={appMode === "testator" ? "blue" : "orange"}
+                                    variant="solid"
+                                    fontSize="xs"
+                                    bg={appMode === "testator" ? "blue.100" : "orange.100"}
+                                    color={appMode === "testator" ? "blue.800" : "orange.800"}
+                                    px={3}
+                                    py={1}
+                                    borderRadius="full"
+                                >
+                                    {appMode === "testator" ? "Режим завещателя" : "Режим наследника"}
+                                </Badge>
+                            </VStack>
+                        )}
 
                         <HStack spacing={4}>
                             {account && (
@@ -332,60 +439,67 @@ function App() {
                                 maxW="1200px"
                             >
                                 <HStack spacing={2}>
-                                    <Button
-                                        onClick={() => setActiveTab("create")}
-                                        colorScheme={activeTab === "create" ? "purple" : "gray"}
-                                        variant={activeTab === "create" ? "solid" : "ghost"}
-                                        flex={1}
-                                        size="lg"
-                                        borderRadius="lg"
-                                        leftIcon={<Icon as={FaFileContract} />}
-                                        bgGradient={activeTab === "create" ? "linear(to-r, #081781, #061264)" : undefined}
-                                        _hover={{
-                                            transform: activeTab === "create" ? "none" : "translateY(-1px)",
-                                            bg: activeTab === "create" ? undefined : useColorModeValue('gray.100', 'gray.700'),
-                                            bgGradient: activeTab === "create" ? "linear(to-r, #061264, #040d47)" : undefined
-                                        }}
-                                        transition="all 0.2s"
-                                    >
-                                        Создать завещание
-                                    </Button>
-                                    <Button
-                                        onClick={() => setActiveTab("myWills")}
-                                        colorScheme={activeTab === "myWills" ? "purple" : "gray"}
-                                        variant={activeTab === "myWills" ? "solid" : "ghost"}
-                                        flex={1}
-                                        size="lg"
-                                        borderRadius="lg"
-                                        leftIcon={<Icon as={FaWallet} />}
-                                        bgGradient={activeTab === "myWills" ? "linear(to-r, #081781, #061264)" : undefined}
-                                        _hover={{
-                                            transform: activeTab === "myWills" ? "none" : "translateY(-1px)",
-                                            bg: activeTab === "myWills" ? undefined : useColorModeValue('gray.100', 'gray.700'),
-                                            bgGradient: activeTab === "myWills" ? "linear(to-r, #061264, #040d47)" : undefined
-                                        }}
-                                        transition="all 0.2s"
-                                    >
-                                        Мои завещания
-                                    </Button>
-                                    <Button
-                                        onClick={() => setActiveTab("heirWills")}
-                                        colorScheme={activeTab === "heirWills" ? "green" : "gray"}
-                                        variant={activeTab === "heirWills" ? "solid" : "ghost"}
-                                        flex={1}
-                                        size="lg"
-                                        borderRadius="lg"
-                                        leftIcon={<Icon as={FaGift} />}
-                                        bgGradient={activeTab === "heirWills" ? "linear(to-r, green.500, green.600)" : undefined}
-                                        _hover={{
-                                            transform: activeTab === "heirWills" ? "none" : "translateY(-1px)",
-                                            bg: activeTab === "heirWills" ? undefined : useColorModeValue('gray.100', 'gray.700'),
-                                            bgGradient: activeTab === "heirWills" ? "linear(to-r, green.600, green.700)" : undefined
-                                        }}
-                                        transition="all 0.2s"
-                                    >
-                                        Мое наследство
-                                    </Button>
+                                    {/* Режим завещателя - показываем "Создать завещание" и "Мои завещания" */}
+                                    {appMode === "testator" && (
+                                        <>
+                                            <Button
+                                                onClick={() => setActiveTab("create")}
+                                                colorScheme={activeTab === "create" ? "purple" : "gray"}
+                                                variant={activeTab === "create" ? "solid" : "ghost"}
+                                                flex={1}
+                                                size="lg"
+                                                borderRadius="lg"
+                                                leftIcon={<Icon as={FaFileContract} />}
+                                                bgGradient={activeTab === "create" ? "linear(to-r, #081781, #061264)" : undefined}
+                                                _hover={{
+                                                    transform: activeTab === "create" ? "none" : "translateY(-1px)",
+                                                    bg: activeTab === "create" ? undefined : useColorModeValue('gray.100', 'gray.700'),
+                                                    bgGradient: activeTab === "create" ? "linear(to-r, #061264, #040d47)" : undefined
+                                                }}
+                                                transition="all 0.2s"
+                                            >
+                                                Создать завещание
+                                            </Button>
+                                            <Button
+                                                onClick={() => setActiveTab("myWills")}
+                                                colorScheme={activeTab === "myWills" ? "purple" : "gray"}
+                                                variant={activeTab === "myWills" ? "solid" : "ghost"}
+                                                flex={1}
+                                                size="lg"
+                                                borderRadius="lg"
+                                                leftIcon={<Icon as={FaWallet} />}
+                                                bgGradient={activeTab === "myWills" ? "linear(to-r, #081781, #061264)" : undefined}
+                                                _hover={{
+                                                    transform: activeTab === "myWills" ? "none" : "translateY(-1px)",
+                                                    bg: activeTab === "myWills" ? undefined : useColorModeValue('gray.100', 'gray.700'),
+                                                    bgGradient: activeTab === "myWills" ? "linear(to-r, #061264, #040d47)" : undefined
+                                                }}
+                                                transition="all 0.2s"
+                                            >
+                                                Мои завещания
+                                            </Button>
+                                        </>
+                                    )}
+
+                                    {/* Режим наследника - показываем только "Моё наследство" */}
+                                    {appMode === "heir" && (
+                                        <Button
+                                            onClick={() => setActiveTab("heirWills")}
+                                            colorScheme="green"
+                                            variant="solid"
+                                            flex={1}
+                                            size="lg"
+                                            borderRadius="lg"
+                                            leftIcon={<Icon as={FaGift} />}
+                                            bgGradient="linear(to-r, green.500, green.600)"
+                                            _hover={{
+                                                bgGradient: "linear(to-r, green.600, green.700)"
+                                            }}
+                                            transition="all 0.2s"
+                                        >
+                                            Моё наследство
+                                        </Button>
+                                    )}
                                 </HStack>
                             </Box>
 
@@ -399,21 +513,28 @@ function App() {
                                 border="1px solid"
                                 borderColor={useColorModeValue('gray.200', 'gray.700')}
                             >
-                                {activeTab === "create" && (
-                                    <CreateWillForm
-                                        signer={signer!}
-                                        onWillCreated={handleWillCreated}
-                                        factoryAddress={CONFIG.FACTORY_ADDRESS}
-                                    />
+                                {/* Режим завещателя */}
+                                {appMode === "testator" && (
+                                    <>
+                                        {activeTab === "create" && (
+                                            <CreateWillForm
+                                                signer={signer!}
+                                                onWillCreated={handleWillCreated}
+                                                factoryAddress={CONFIG.FACTORY_ADDRESS}
+                                            />
+                                        )}
+                                        {activeTab === "myWills" && (
+                                            <MyWills
+                                                signer={signer!}
+                                                ref={myWillsRef}
+                                                factoryAddress={CONFIG.FACTORY_ADDRESS}
+                                            />
+                                        )}
+                                    </>
                                 )}
-                                {activeTab === "myWills" && (
-                                    <MyWills
-                                        signer={signer!}
-                                        ref={myWillsRef}
-                                        factoryAddress={CONFIG.FACTORY_ADDRESS}
-                                    />
-                                )}
-                                {activeTab === "heirWills" && (
+
+                                {/* Режим наследника */}
+                                {appMode === "heir" && (
                                     <HeirWills
                                         signer={signer!}
                                         ref={heirWillsRef}
