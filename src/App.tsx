@@ -25,15 +25,15 @@ import CreateWillForm from "./components/CreateWillForm";
 import MyWills from "./components/MyWills";
 import HeirWills from "./components/HeirWills";
 
-// Конфигурация приложения
+// Application configuration
 const CONFIG = {
-    // API-ключ Arbiscan - замените на свой реальный ключ
+    // Arbiscan API key - replace with your real key
     ARBISCAN_API_KEY: "EER1P87Y4I6R4JT9K3KYRWTVWET72VGH5V",
-    // Адрес новой фабрики смарт-контрактов с исправлениями безопасности
+    // New factory address with security fixes
     FACTORY_ADDRESS: "0x48D5CbBa0c6A47D2d6a8952b85826c3E0ba82ba3"
 };
 
-// Типы режимов приложения
+// Application mode types
 type AppMode = "testator" | "heir";
 
 function App() {
@@ -46,12 +46,12 @@ function App() {
     const myWillsRef = useRef<any>(null);
     const heirWillsRef = useRef<any>(null);
 
-    // Загрузка режима приложения из localStorage при инициализации
+    // Load app mode from localStorage on initialization
     useEffect(() => {
         const savedMode = localStorage.getItem('smartwill-app-mode') as AppMode;
         if (savedMode && (savedMode === "testator" || savedMode === "heir")) {
             setAppMode(savedMode);
-            // Если режим наследника, автоматически переключаемся на соответствующую вкладку
+            // If heir mode, automatically switch to the corresponding tab
             if (savedMode === "heir") {
                 setActiveTab("heirWills");
             } else {
@@ -60,7 +60,7 @@ function App() {
         }
     }, []);
 
-    // Автоматическая коррекция вкладки при смене режима
+    // Automatic tab correction when mode changes
     useEffect(() => {
         if (appMode === "heir" && activeTab !== "heirWills") {
             setActiveTab("heirWills");
@@ -69,12 +69,12 @@ function App() {
         }
     }, [appMode, activeTab]);
 
-    // Сохранение режима приложения в localStorage при изменении
+    // Save app mode to localStorage when changed
     const handleModeChange = (newMode: AppMode) => {
         setAppMode(newMode);
         localStorage.setItem('smartwill-app-mode', newMode);
 
-        // Автоматически переключаем вкладку в зависимости от режима
+        // Automatically switch tab depending on mode
         if (newMode === "heir") {
             setActiveTab("heirWills");
         } else {
@@ -82,9 +82,9 @@ function App() {
         }
     };
 
-    // Функция для подключения к кошельку
+    // Function to connect to wallet
     const connect = async () => {
-        if (!window.ethereum) return alert("Установите MetaMask");
+        if (!window.ethereum) return alert("Please install MetaMask");
         const web3Provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await web3Provider.getSigner();
         const address = await signer.getAddress();
@@ -93,60 +93,60 @@ function App() {
         setAccount(address);
     };
 
-    // Автоматически подключаемся к кошельку при загрузке страницы
+    // Automatically connect to wallet on page load
     useEffect(() => {
         const autoConnect = async () => {
-            // Проверяем, доступен ли MetaMask
+            // Check if MetaMask is available
             if (!window.ethereum) {
-                console.log("MetaMask не установлен");
+                console.log("MetaMask not installed");
                 return;
             }
 
             try {
-                // Проверяем, есть ли уже подключенные аккаунты
+                // Check if there are already connected accounts
                 const accounts = await window.ethereum.request({ method: 'eth_accounts' });
 
                 if (accounts && accounts.length > 0) {
-                    console.log("Автоматическое подключение к MetaMask");
+                    console.log("Auto-connecting to MetaMask");
                     connect();
                 } else {
-                    console.log("Нет подключенных аккаунтов");
+                    console.log("No connected accounts");
                 }
             } catch (error) {
-                console.error("Ошибка при автоматическом подключении:", error);
+                console.error("Error during auto-connect:", error);
             }
         };
 
         autoConnect();
 
-        // Добавляем обработчики событий MetaMask
+        // Add MetaMask event listeners
         const setupEventListeners = () => {
             if (!window.ethereum) return;
 
-            // Обработка события смены аккаунта
+            // Handle account change event
             window.ethereum.on('accountsChanged', (accounts: string[]) => {
                 if (accounts.length === 0) {
-                    // Пользователь отключил кошелек
-                    console.log("Кошелек отключен");
+                    // User disconnected wallet
+                    console.log("Wallet disconnected");
                     setAccount("");
                     setSigner(null);
                     setProvider(null);
                 } else {
-                    // Пользователь сменил аккаунт
-                    console.log("Аккаунт изменен на:", accounts[0]);
+                    // User changed account
+                    console.log("Account changed to:", accounts[0]);
                     connect();
                 }
             });
 
-            // Обработка события смены сети
+            // Handle network change event
             window.ethereum.on('chainChanged', () => {
-                console.log("Сеть изменена, обновляем подключение");
+                console.log("Network changed, updating connection");
                 connect();
             });
 
-            // Обработка события отключения
+            // Handle disconnect event
             window.ethereum.on('disconnect', () => {
-                console.log("Кошелек отключен");
+                console.log("Wallet disconnected");
                 setAccount("");
                 setSigner(null);
                 setProvider(null);
@@ -155,7 +155,7 @@ function App() {
 
         setupEventListeners();
 
-        // Очистка обработчиков при размонтировании компонента
+        // Clean up listeners when component unmounts
         return () => {
             if (window.ethereum) {
                 window.ethereum.removeAllListeners();
@@ -163,7 +163,7 @@ function App() {
         };
     }, []);
 
-    // Проверяем сеть при подключении
+    // Check network when connected
     useEffect(() => {
         const checkNetwork = async () => {
             if (!provider) return;
@@ -174,16 +174,16 @@ function App() {
                     name: network.name
                 });
             } catch (err) {
-                console.error("Ошибка при получении информации о сети:", err);
+                console.error("Error getting network information:", err);
             }
         };
 
         checkNetwork();
     }, [provider]);
 
-    // Обработчик события создания завещания
+    // Will creation event handler
     const handleWillCreated = () => {
-        // Убеждаемся, что мы в режиме завещателя и переключаемся на вкладку "Мои завещания"
+        // Make sure we're in testator mode and switch to "My Wills" tab
         if (appMode !== "testator") {
             setAppMode("testator");
             localStorage.setItem('smartwill-app-mode', "testator");
@@ -191,16 +191,16 @@ function App() {
 
         setActiveTab("myWills");
 
-        // Даем небольшую задержку для переключения вкладки
+        // Give a small delay for tab switching
         setTimeout(() => {
-            // Если есть ссылка на компонент MyWills, вызываем обновление
+            // If there's a reference to MyWills component, call update
             if (myWillsRef.current && typeof myWillsRef.current.loadWills === 'function') {
                 myWillsRef.current.loadWills();
             }
         }, 100);
     };
 
-    // Проверяем, находимся ли мы на правильной сети (Arbitrum Sepolia)
+    // Check if we're on the correct network (Arbitrum Sepolia)
     const isCorrectNetwork = network && network.chainId === 421614;
 
     const bgGradient = useColorModeValue(
@@ -213,7 +213,7 @@ function App() {
 
     return (
         <Box bg={useColorModeValue('gray.50', 'gray.900')} minH="100vh">
-            {/* Современный хедер */}
+            {/* Modern header */}
             <Box
                 bgGradient={bgGradient}
                 py={6}
@@ -222,7 +222,7 @@ function App() {
                 position="relative"
                 overflow="hidden"
             >
-                {/* Декоративные элементы */}
+                {/* Decorative elements */}
                 <Box
                     position="absolute"
                     top="-50%"
@@ -255,16 +255,16 @@ function App() {
                                 <Text fontSize="sm" color="whiteAlpha.800">
                                     {account ?
                                         (appMode === "testator" ?
-                                            "Создавайте и управляйте завещаниями" :
-                                            "Проверяйте доступное наследство"
+                                            "Create and manage wills" :
+                                            "Check available inheritance"
                                         ) :
-                                        "Цифровое наследство на блокчейне"
+                                        "Digital inheritance on blockchain"
                                     }
                                 </Text>
                             </VStack>
                         </HStack>
 
-                        {/* Переключатель режимов (показываем только при подключенном кошельке) */}
+                        {/* Mode switch (show only when wallet is connected) */}
                         {account && (
                             <VStack spacing={2}>
                                 <FormControl display="flex" alignItems="center" justifyContent="center">
@@ -278,7 +278,7 @@ function App() {
                                                 color={appMode === "testator" ? "white" : "whiteAlpha.600"}
                                                 fontWeight={appMode === "testator" ? "bold" : "normal"}
                                             >
-                                                Завещатель
+                                                Testator
                                             </FormLabel>
                                         </HStack>
                                         <Switch
@@ -296,7 +296,7 @@ function App() {
                                                 color={appMode === "heir" ? "white" : "whiteAlpha.600"}
                                                 fontWeight={appMode === "heir" ? "bold" : "normal"}
                                             >
-                                                Наследник
+                                                Heir
                                             </FormLabel>
                                             <Icon as={FaHeart} color={appMode === "heir" ? "white" : "whiteAlpha.600"} />
                                         </HStack>
@@ -312,7 +312,7 @@ function App() {
                                     py={1}
                                     borderRadius="full"
                                 >
-                                    {appMode === "testator" ? "Режим завещателя" : "Режим наследника"}
+                                    {appMode === "testator" ? "Testator Mode" : "Heir Mode"}
                                 </Badge>
                             </VStack>
                         )}
@@ -336,7 +336,7 @@ function App() {
                                         py={1}
                                         borderRadius="full"
                                     >
-                                        Фабрика подключена
+                                        Factory Connected
                                     </Badge>
                                 </VStack>
                             )}
@@ -357,10 +357,10 @@ function App() {
                         >
                             <AlertIcon />
                             <Box>
-                                <AlertTitle>Неверная сеть!</AlertTitle>
+                                <AlertTitle>Wrong Network!</AlertTitle>
                                 <AlertDescription>
-                                    Вы подключены к сети {network.name || `Chain ID: ${network.chainId}`}.
-                                    Пожалуйста, переключитесь на Arbitrum Sepolia в вашем кошельке.
+                                    You are connected to {network.name || `Chain ID: ${network.chainId}`}.
+                                    Please switch to Arbitrum Sepolia in your wallet.
                                 </AlertDescription>
                             </Box>
                         </Alert>
@@ -372,35 +372,35 @@ function App() {
                                 <VStack spacing={4}>
                                     <Icon as={FaFileContract} boxSize={16} color="#081781" />
                                     <Heading size="2xl" bgGradient="linear(to-r, #081781, #061264)" bgClip="text">
-                                        Управляйте своими цифровыми активами
+                                        Manage Your Digital Assets
                                     </Heading>
                                     <Text fontSize="xl" color={textColor} maxW="700px" lineHeight="tall">
-                                        SmartWill помогает создавать умные завещания на блокчейне,
-                                        обеспечивая безопасную передачу ваших криптоактивов наследникам.
+                                        SmartWill helps create smart wills on blockchain,
+                                        ensuring secure transfer of your crypto assets to heirs.
                                     </Text>
                                 </VStack>
 
-                                {/* Преимущества */}
+                                {/* Benefits */}
                                 <HStack spacing={8} pt={8}>
                                     <VStack spacing={2}>
                                         <Icon as={FaShieldAlt} boxSize={8} color="green.500" />
-                                        <Text fontWeight="semibold">Безопасность</Text>
+                                        <Text fontWeight="semibold">Security</Text>
                                         <Text fontSize="sm" color={textColor} textAlign="center">
-                                            Защищено блокчейном
+                                            Protected by blockchain
                                         </Text>
                                     </VStack>
                                     <VStack spacing={2}>
                                         <Icon as={FaFileContract} boxSize={8} color="blue.500" />
-                                        <Text fontWeight="semibold">Автоматизация</Text>
+                                        <Text fontWeight="semibold">Automation</Text>
                                         <Text fontSize="sm" color={textColor} textAlign="center">
-                                            Умные контракты
+                                            Smart contracts
                                         </Text>
                                     </VStack>
                                     <VStack spacing={2}>
                                         <Icon as={FaWallet} boxSize={8} color="#081781" />
-                                        <Text fontWeight="semibold">Простота</Text>
+                                        <Text fontWeight="semibold">Simplicity</Text>
                                         <Text fontSize="sm" color={textColor} textAlign="center">
-                                            Легкое управление
+                                            Easy management
                                         </Text>
                                     </VStack>
                                 </HStack>
@@ -423,13 +423,13 @@ function App() {
                                     transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
                                     borderRadius="xl"
                                 >
-                                    Подключить кошелек
+                                    Connect Wallet
                                 </Button>
                             </VStack>
                         </Box>
                     ) : (
                         <>
-                            {/* Навигационные кнопки */}
+                            {/* Navigation buttons */}
                             <Box
                                 bg={cardBg}
                                 borderRadius="xl"
@@ -439,7 +439,7 @@ function App() {
                                 maxW="1200px"
                             >
                                 <HStack spacing={2}>
-                                    {/* Режим завещателя - показываем "Создать завещание" и "Мои завещания" */}
+                                    {/* Testator mode - show "Create Will" and "My Wills" */}
                                     {appMode === "testator" && (
                                         <>
                                             <Button
@@ -458,7 +458,7 @@ function App() {
                                                 }}
                                                 transition="all 0.2s"
                                             >
-                                                Создать завещание
+                                                Create Will
                                             </Button>
                                             <Button
                                                 onClick={() => setActiveTab("myWills")}
@@ -476,12 +476,12 @@ function App() {
                                                 }}
                                                 transition="all 0.2s"
                                             >
-                                                Мои завещания
+                                                My Wills
                                             </Button>
                                         </>
                                     )}
 
-                                    {/* Режим наследника - показываем только "Моё наследство" */}
+                                    {/* Heir mode - show only "My Inheritance" */}
                                     {appMode === "heir" && (
                                         <Button
                                             onClick={() => setActiveTab("heirWills")}
@@ -497,13 +497,13 @@ function App() {
                                             }}
                                             transition="all 0.2s"
                                         >
-                                            Моё наследство
+                                            My Inheritance
                                         </Button>
                                     )}
                                 </HStack>
                             </Box>
 
-                            {/* Основной контент */}
+                            {/* Main content */}
                             <Box
                                 p={8}
                                 borderRadius="xl"
@@ -513,7 +513,7 @@ function App() {
                                 border="1px solid"
                                 borderColor={useColorModeValue('gray.200', 'gray.700')}
                             >
-                                {/* Режим завещателя */}
+                                {/* Testator mode */}
                                 {appMode === "testator" && (
                                     <>
                                         {activeTab === "create" && (
@@ -533,7 +533,7 @@ function App() {
                                     </>
                                 )}
 
-                                {/* Режим наследника */}
+                                {/* Heir mode */}
                                 {appMode === "heir" && (
                                     <HeirWills
                                         signer={signer!}

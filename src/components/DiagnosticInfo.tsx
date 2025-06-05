@@ -30,7 +30,7 @@ const DiagnosticInfo = ({ signer, factoryAddress }: DiagnosticInfoProps) => {
     const [diagnostics, setDiagnostics] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const { isOpen, onToggle } = useDisclosure();
-    
+
     const cardBg = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.600', 'gray.300');
 
@@ -55,11 +55,11 @@ const DiagnosticInfo = ({ signer, factoryAddress }: DiagnosticInfoProps) => {
             };
 
             try {
-                // Проверяем все завещания
+                // Check all wills
                 const allWills = await factory.getDeployedWills();
                 results.allWills = allWills;
 
-                // Проверяем мои завещания
+                // Check my wills
                 const myWills = await factory.getMyWills();
                 results.myWills = myWills;
             } catch (error: any) {
@@ -68,7 +68,7 @@ const DiagnosticInfo = ({ signer, factoryAddress }: DiagnosticInfoProps) => {
 
             setDiagnostics(results);
         } catch (error) {
-            console.error("Ошибка диагностики:", error);
+            console.error("Diagnostic error:", error);
         } finally {
             setLoading(false);
         }
@@ -84,13 +84,13 @@ const DiagnosticInfo = ({ signer, factoryAddress }: DiagnosticInfoProps) => {
                 leftIcon={<Icon as={FaBug} />}
                 mb={4}
             >
-                {isOpen ? "Скрыть диагностику" : "Показать диагностику"}
+                {isOpen ? "Hide Diagnostics" : "Show Diagnostics"}
             </Button>
 
             <Collapse in={isOpen} animateOpacity>
-                <Box 
-                    p={6} 
-                    borderRadius="xl" 
+                <Box
+                    p={6}
+                    borderRadius="xl"
                     bg={cardBg}
                     border="2px solid"
                     borderColor="orange.200"
@@ -101,19 +101,19 @@ const DiagnosticInfo = ({ signer, factoryAddress }: DiagnosticInfoProps) => {
                         <HStack spacing={3}>
                             <Icon as={FaInfoCircle} color="orange.500" boxSize={5} />
                             <Heading size="md" color="orange.500">
-                                Диагностическая информация
+                                Diagnostic Information
                             </Heading>
                         </HStack>
 
                         <Button
                             onClick={runDiagnostics}
                             isLoading={loading}
-                            loadingText="Выполняется диагностика..."
+                            loadingText="Running diagnostics..."
                             colorScheme="orange"
                             variant="outline"
                             size="md"
                         >
-                            Запустить диагностику
+                            Run Diagnostics
                         </Button>
 
                         {diagnostics && (
@@ -121,19 +121,19 @@ const DiagnosticInfo = ({ signer, factoryAddress }: DiagnosticInfoProps) => {
                                 <Divider />
 
                                 <VStack spacing={3} align="stretch">
-                                    <Text fontWeight="bold">Информация о подключении:</Text>
+                                    <Text fontWeight="bold">Connection Information:</Text>
                                     <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="md">
                                         <VStack spacing={2} align="stretch" fontSize="sm">
                                             <HStack justify="space-between">
-                                                <Text color={textColor}>Ваш адрес:</Text>
+                                                <Text color={textColor}>Your Address:</Text>
                                                 <Code>{diagnostics.userAddress}</Code>
                                             </HStack>
                                             <HStack justify="space-between">
-                                                <Text color={textColor}>Фабрика:</Text>
+                                                <Text color={textColor}>Factory:</Text>
                                                 <Code>{diagnostics.factoryAddress}</Code>
                                             </HStack>
                                             <HStack justify="space-between">
-                                                <Text color={textColor}>Сеть:</Text>
+                                                <Text color={textColor}>Network:</Text>
                                                 <Badge colorScheme="blue">
                                                     {diagnostics.network.name} (ID: {diagnostics.network.chainId})
                                                 </Badge>
@@ -143,19 +143,19 @@ const DiagnosticInfo = ({ signer, factoryAddress }: DiagnosticInfoProps) => {
                                 </VStack>
 
                                 <VStack spacing={3} align="stretch">
-                                    <Text fontWeight="bold">Результаты запросов:</Text>
+                                    <Text fontWeight="bold">Query Results:</Text>
                                     <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="md">
                                         <VStack spacing={2} align="stretch" fontSize="sm">
                                             <HStack justify="space-between">
-                                                <Text color={textColor}>Всего завещаний в фабрике:</Text>
+                                                <Text color={textColor}>Total wills in factory:</Text>
                                                 <Badge colorScheme="purple" variant="solid">
                                                     {diagnostics.allWills.length}
                                                 </Badge>
                                             </HStack>
                                             <HStack justify="space-between">
-                                                <Text color={textColor}>Ваших завещаний:</Text>
-                                                <Badge 
-                                                    colorScheme={diagnostics.myWills.length > 0 ? "green" : "red"} 
+                                                <Text color={textColor}>Your wills:</Text>
+                                                <Badge
+                                                    colorScheme={diagnostics.myWills.length > 0 ? "green" : "red"}
                                                     variant="solid"
                                                 >
                                                     {diagnostics.myWills.length}
@@ -167,7 +167,7 @@ const DiagnosticInfo = ({ signer, factoryAddress }: DiagnosticInfoProps) => {
 
                                 {diagnostics.myWills.length > 0 && (
                                     <VStack spacing={3} align="stretch">
-                                        <Text fontWeight="bold">Адреса ваших завещаний:</Text>
+                                        <Text fontWeight="bold">Your will addresses:</Text>
                                         <Box p={3} bg={useColorModeValue('green.50', 'green.900')} borderRadius="md">
                                             {diagnostics.myWills.map((address: string, index: number) => (
                                                 <Text key={index} fontSize="sm" fontFamily="monospace" color="green.600">
@@ -189,8 +189,8 @@ const DiagnosticInfo = ({ signer, factoryAddress }: DiagnosticInfoProps) => {
                                     <Alert status="warning" borderRadius="md">
                                         <AlertIcon />
                                         <AlertDescription>
-                                            Завещания не найдены. Возможно, они были созданы на старой фабрике 
-                                            или еще не подтвердились в сети.
+                                            No wills found. They may have been created on an old factory
+                                            or haven't been confirmed on the network yet.
                                         </AlertDescription>
                                     </Alert>
                                 )}
@@ -203,4 +203,4 @@ const DiagnosticInfo = ({ signer, factoryAddress }: DiagnosticInfoProps) => {
     );
 };
 
-export default DiagnosticInfo; 
+export default DiagnosticInfo;

@@ -57,7 +57,7 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
         try {
             setLoading(true);
             const will = new ethers.Contract(willAddress, smartWillAbi.abi, signer);
-            
+
             const [
                 owner,
                 heir,
@@ -100,7 +100,7 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
 
         } catch (error: any) {
             toast({
-                title: "Ошибка загрузки",
+                title: "Loading Error",
                 description: error.message,
                 status: "error",
                 duration: 5000
@@ -123,16 +123,16 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
             const hours = Math.floor(timeLeft / 3600);
             const minutes = Math.floor((timeLeft % 3600) / 60);
             const seconds = timeLeft % 60;
-            
+
             if (hours > 0) {
-                setCountdown(`${hours}ч ${minutes}м ${seconds}с`);
+                setCountdown(`${hours}h ${minutes}m ${seconds}s`);
             } else if (minutes > 0) {
-                setCountdown(`${minutes}м ${seconds}с`);
+                setCountdown(`${minutes}m ${seconds}s`);
             } else {
-                setCountdown(`${seconds}с`);
+                setCountdown(`${seconds}s`);
             }
         } else {
-            setCountdown("Неактивен!");
+            setCountdown("Inactive!");
         }
     };
 
@@ -142,31 +142,31 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
         try {
             setConfirmLoading(true);
             const will = new ethers.Contract(willAddress, smartWillAbi.abi, signer);
-            
+
             const tx = await will.confirmActivity();
-            
+
             toast({
-                title: "Транзакция отправлена",
-                description: "Подтверждение активности...",
+                title: "Transaction Sent",
+                description: "Confirming activity...",
                 status: "info",
                 duration: 3000
             });
 
             await tx.wait();
-            
+
             toast({
-                title: "✅ Активность подтверждена!",
-                description: "Вы успешно подтвердили, что живы и здоровы",
+                title: "✅ Activity Confirmed!",
+                description: "You have successfully confirmed that you are alive and healthy",
                 status: "success",
                 duration: 5000
             });
 
-            // Обновляем информацию
+            // Update information
             loadWillInfo();
 
         } catch (error: any) {
             toast({
-                title: "Ошибка подтверждения",
+                title: "Confirmation Error",
                 description: error.message,
                 status: "error",
                 duration: 5000
@@ -191,7 +191,7 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
     if (loading) {
         return (
             <Box textAlign="center" py={10}>
-                <Text>Загрузка информации о завещании...</Text>
+                <Text>Loading will information...</Text>
             </Box>
         );
     }
@@ -200,61 +200,61 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
         return (
             <Alert status="error">
                 <AlertIcon />
-                <AlertTitle>Ошибка!</AlertTitle>
-                <AlertDescription>Не удалось загрузить информацию о завещании</AlertDescription>
+                <AlertTitle>Error!</AlertTitle>
+                <AlertDescription>Failed to load will information</AlertDescription>
             </Alert>
         );
     }
 
-    const progressValue = timeUntilInactive > 0 
+    const progressValue = timeUntilInactive > 0
         ? (timeUntilInactive / Number(willInfo.willActivateWaitingPeriod)) * 100
         : 0;
 
     return (
         <VStack spacing={6} align="stretch">
-            {/* Заголовок */}
+            {/* Header */}
             <Card bg={cardBg}>
                 <CardHeader>
                     <HStack>
                         <Icon as={FaShieldAlt} color="blue.500" boxSize={6} />
                         <VStack align="start" spacing={0}>
-                            <Heading size="lg">Мое завещание</Heading>
+                            <Heading size="lg">My Will</Heading>
                             <Text color={textColor}>
-                                Адрес контракта: {willAddress.slice(0, 6)}...{willAddress.slice(-4)}
+                                Contract address: {willAddress.slice(0, 6)}...{willAddress.slice(-4)}
                             </Text>
                         </VStack>
                     </HStack>
                 </CardHeader>
             </Card>
 
-            {/* Статус активности */}
+            {/* Activity status */}
             <Card bg={cardBg}>
                 <CardBody>
                     <VStack spacing={4}>
                         <HStack justify="space-between" width="100%">
                             <HStack>
                                 <Icon as={FaUser} color="green.500" />
-                                <Text fontWeight="semibold">Ваш статус</Text>
+                                <Text fontWeight="semibold">Your Status</Text>
                             </HStack>
-                            <Badge 
-                                colorScheme={willInfo.isOwnerActive ? "green" : "red"} 
+                            <Badge
+                                colorScheme={willInfo.isOwnerActive ? "green" : "red"}
                                 size="lg"
                                 px={3}
                                 py={1}
                             >
-                                {willInfo.isOwnerActive ? "🟢 Активен" : "🔴 Неактивен"}
+                                {willInfo.isOwnerActive ? "🟢 Active" : "🔴 Inactive"}
                             </Badge>
                         </HStack>
 
                         <Box width="100%">
                             <HStack justify="space-between" mb={2}>
-                                <Text fontSize="sm" color={textColor}>Время до неактивности:</Text>
+                                <Text fontSize="sm" color={textColor}>Time until inactive:</Text>
                                 <Text fontSize="sm" fontWeight="semibold" color={timeUntilInactive <= 0 ? "red.500" : "green.500"}>
                                     {countdown}
                                 </Text>
                             </HStack>
-                            <Progress 
-                                value={progressValue} 
+                            <Progress
+                                value={progressValue}
                                 colorScheme={timeUntilInactive <= 0 ? "red" : "green"}
                                 size="lg"
                                 borderRadius="lg"
@@ -262,16 +262,16 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
                         </Box>
 
                         <Text fontSize="sm" color={textColor} textAlign="center">
-                            Последняя активность: {new Date(Number(willInfo.lastActivity) * 1000).toLocaleString()}
+                            Last activity: {new Date(Number(willInfo.lastActivity) * 1000).toLocaleString()}
                         </Text>
 
                         {!willInfo.isOwnerActive && (
                             <Alert status="error" borderRadius="lg">
                                 <AlertIcon />
                                 <Box>
-                                    <AlertTitle>⚠️ Вы неактивны!</AlertTitle>
+                                    <AlertTitle>⚠️ You are inactive!</AlertTitle>
                                     <AlertDescription>
-                                        Наследник может получать выплаты. Подтвердите активность немедленно!
+                                        The heir can receive payments. Confirm activity immediately!
                                     </AlertDescription>
                                 </Box>
                             </Alert>
@@ -281,9 +281,9 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
                             <Alert status="warning" borderRadius="lg">
                                 <AlertIcon />
                                 <Box>
-                                    <AlertTitle>⏰ Скоро станете неактивны!</AlertTitle>
+                                    <AlertTitle>⏰ You will soon become inactive!</AlertTitle>
                                     <AlertDescription>
-                                        Подтвердите активность в течение {countdown}, иначе наследник сможет получать выплаты.
+                                        Confirm activity within {countdown}, otherwise the heir will be able to receive payments.
                                     </AlertDescription>
                                 </Box>
                             </Alert>
@@ -292,28 +292,28 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
                 </CardBody>
             </Card>
 
-            {/* Информация о наследнике */}
+            {/* Heir information */}
             <Card bg={cardBg}>
                 <CardBody>
                     <VStack spacing={4}>
                         <HStack justify="space-between" width="100%">
                             <HStack>
                                 <Icon as={FaHeart} color="red.500" />
-                                <Text fontWeight="semibold">Наследник</Text>
+                                <Text fontWeight="semibold">Heir</Text>
                             </HStack>
                         </HStack>
 
                         <VStack spacing={2} align="stretch">
                             <HStack justify="space-between">
-                                <Text color={textColor}>Имя:</Text>
+                                <Text color={textColor}>Name:</Text>
                                 <Text fontWeight="semibold">{willInfo.heirName}</Text>
                             </HStack>
                             <HStack justify="space-between">
-                                <Text color={textColor}>Роль:</Text>
+                                <Text color={textColor}>Role:</Text>
                                 <Text fontWeight="semibold">{willInfo.heirRole}</Text>
                             </HStack>
                             <HStack justify="space-between">
-                                <Text color={textColor}>Адрес:</Text>
+                                <Text color={textColor}>Address:</Text>
                                 <Text fontFamily="monospace" fontSize="sm">
                                     {willInfo.heir.slice(0, 6)}...{willInfo.heir.slice(-4)}
                                 </Text>
@@ -323,32 +323,32 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
                 </CardBody>
             </Card>
 
-            {/* Параметры выплат */}
+            {/* Payment parameters */}
             <Card bg={cardBg}>
                 <CardBody>
                     <VStack spacing={4}>
                         <HStack justify="space-between" width="100%">
                             <HStack>
                                 <Icon as={FaEthereum} color="green.500" />
-                                <Text fontWeight="semibold">Параметры выплат</Text>
+                                <Text fontWeight="semibold">Payment Parameters</Text>
                             </HStack>
                         </HStack>
 
                         <VStack spacing={2} align="stretch">
                             <HStack justify="space-between">
-                                <Text color={textColor}>Сумма выплаты:</Text>
+                                <Text color={textColor}>Payment amount:</Text>
                                 <Text fontWeight="semibold">{ethers.formatEther(willInfo.transferAmount)} ETH</Text>
                             </HStack>
                             <HStack justify="space-between">
-                                <Text color={textColor}>Частота:</Text>
-                                <Text fontWeight="semibold">Каждые {Math.floor(Number(willInfo.transferFrequency) / 60)} минут</Text>
+                                <Text color={textColor}>Frequency:</Text>
+                                <Text fontWeight="semibold">Every {Math.floor(Number(willInfo.transferFrequency) / 60)} minutes</Text>
                             </HStack>
                             <HStack justify="space-between">
-                                <Text color={textColor}>Период ожидания:</Text>
-                                <Text fontWeight="semibold">{Math.floor(Number(willInfo.willActivateWaitingPeriod) / 60)} минут</Text>
+                                <Text color={textColor}>Waiting period:</Text>
+                                <Text fontWeight="semibold">{Math.floor(Number(willInfo.willActivateWaitingPeriod) / 60)} minutes</Text>
                             </HStack>
                             <HStack justify="space-between">
-                                <Text color={textColor}>Баланс:</Text>
+                                <Text color={textColor}>Balance:</Text>
                                 <Text fontWeight="semibold" color="green.500">{ethers.formatEther(willInfo.balance)} ETH</Text>
                             </HStack>
                         </VStack>
@@ -356,7 +356,7 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
                 </CardBody>
             </Card>
 
-            {/* Кнопка подтверждения активности */}
+            {/* Activity confirmation button */}
             <Card bg={cardBg}>
                 <CardBody>
                     <VStack spacing={4}>
@@ -371,27 +371,27 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
                             fontSize="lg"
                             fontWeight="bold"
                             borderRadius="xl"
-                            loadingText="Подтверждение..."
+                            loadingText="Confirming..."
                             _hover={{
                                 transform: "translateY(-2px)",
                                 boxShadow: "xl"
                             }}
                         >
-                            💚 Я жив и здоров!
+                            💚 I'm alive and healthy!
                         </Button>
 
                         <Text textAlign="center" color={textColor} fontSize="sm">
-                            Регулярно подтверждайте активность, чтобы наследник не мог получить средства
+                            Regularly confirm your activity so the heir cannot receive funds
                         </Text>
 
                         <Alert status="info" borderRadius="lg">
                             <AlertIcon />
                             <Box>
-                                <AlertTitle>ℹ️ Как это работает</AlertTitle>
+                                <AlertTitle>ℹ️ How it works</AlertTitle>
                                 <AlertDescription>
-                                    Когда вы нажимаете эту кнопку, период ожидания сбрасывается. 
-                                    Наследник сможет получать выплаты только если вы не подтверждаете активность 
-                                    в течение {Math.floor(Number(willInfo.willActivateWaitingPeriod) / 60)} минут.
+                                    When you press this button, the waiting period resets.
+                                    The heir will only be able to receive payments if you don't confirm activity
+                                    within {Math.floor(Number(willInfo.willActivateWaitingPeriod) / 60)} minutes.
                                 </AlertDescription>
                             </Box>
                         </Alert>
@@ -399,7 +399,7 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
                 </CardBody>
             </Card>
 
-            {/* Информация о следующем возможном переводе */}
+            {/* Information about the next possible transfer */}
             {!willInfo.isOwnerActive && (
                 <Card bg={cardBg} borderColor="red.500" borderWidth="2px">
                     <CardBody>
@@ -407,18 +407,18 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
                             <HStack justify="space-between" width="100%">
                                 <HStack>
                                     <Icon as={FaClock} color="red.500" />
-                                    <Text fontWeight="semibold" color="red.500">ВНИМАНИЕ!</Text>
+                                    <Text fontWeight="semibold" color="red.500">ATTENTION!</Text>
                                 </HStack>
                             </HStack>
 
                             <Alert status="error" borderRadius="lg">
                                 <AlertIcon />
                                 <Box>
-                                    <AlertTitle>Наследник может получать выплаты!</AlertTitle>
+                                    <AlertTitle>The heir can receive payments!</AlertTitle>
                                     <AlertDescription>
-                                        Следующий возможный перевод: {new Date(Number(willInfo.nextPossibleTransferTime) * 1000).toLocaleString()}
+                                        Next possible transfer: {new Date(Number(willInfo.nextPossibleTransferTime) * 1000).toLocaleString()}
                                         <br />
-                                        Подтвердите активность, чтобы заблокировать переводы.
+                                        Confirm activity to block transfers.
                                     </AlertDescription>
                                 </Box>
                             </Alert>
@@ -427,7 +427,7 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
                 </Card>
             )}
 
-            {/* Обновление данных */}
+            {/* Update data */}
             <Box textAlign="center">
                 <Button
                     variant="outline"
@@ -435,9 +435,9 @@ export default function OwnerDashboard({ signer, willAddress }: Props) {
                     isLoading={loading}
                     leftIcon={<Icon as={FaShieldAlt} />}
                 >
-                    Обновить данные
+                    Update data
                 </Button>
             </Box>
         </VStack>
     );
-} 
+}

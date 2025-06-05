@@ -15,45 +15,45 @@ export default function DeployFactoryButton({ signer, onFactoryDeployed }: Props
   const deployFactory = async () => {
     try {
       setLoading(true);
-      
-      // Создаем фабрику контрактов
+
+      // Create contracts factory
       const factory = new ethers.ContractFactory(
         factoryAbi.abi,
         factoryAbi.bytecode,
         signer
       );
-      
-      // Деплоим контракт
+
+      // Deploy contract
       const contract = await factory.deploy();
-      
+
       toast({
-        title: "Транзакция отправлена",
-        description: "Ожидание подтверждения деплоя новой фабрики...",
+        title: "Transaction Sent",
+        description: "Waiting for new factory deployment confirmation...",
         status: "info",
         duration: 5000
       });
-      
-      // Ждем завершения деплоя
+
+      // Wait for deployment completion
       await contract.waitForDeployment();
-      
-      // Получаем адрес нового контракта
+
+      // Get new contract address
       const contractAddress = await contract.getAddress();
-      
-      // Сохраняем адрес в localStorage
+
+      // Save address to localStorage
       localStorage.setItem("factoryAddress", contractAddress);
-      
+
       toast({
-        title: "Новая фабрика развернута",
-        description: `Адрес новой фабрики: ${contractAddress}`,
+        title: "New Factory Deployed",
+        description: `New factory address: ${contractAddress}`,
         status: "success",
         duration: 5000
       });
-      
-      // Вызываем коллбек
+
+      // Call callback
       onFactoryDeployed(contractAddress);
     } catch (err: any) {
       toast({
-        title: "Ошибка деплоя",
+        title: "Deployment Error",
         description: err.message,
         status: "error",
         duration: 5000
@@ -68,10 +68,10 @@ export default function DeployFactoryButton({ signer, onFactoryDeployed }: Props
       colorScheme="purple"
       onClick={deployFactory}
       isLoading={loading}
-      loadingText="Деплой..."
+      loadingText="Deploying..."
       size="sm"
     >
-      Создать новую фабрику
+      Create New Factory
     </Button>
   );
-} 
+}

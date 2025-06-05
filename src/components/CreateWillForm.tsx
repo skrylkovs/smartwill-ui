@@ -49,79 +49,79 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
     const [networkError, setNetworkError] = useState<string | null>(null);
 
     const toast = useToast();
-    
-    // Проверка сети при загрузке компонента
+
+    // Check network on component load
     useEffect(() => {
         const checkNetwork = async () => {
             try {
                 if (!signer) return;
-                
-                // Получаем информацию о сети
+
+                // Get network information
                 const provider = signer.provider as ethers.BrowserProvider;
                 const network = await provider.getNetwork();
                 const chainId = Number(network.chainId);
-                
-                // ID сети Arbitrum Sepolia: 421614
+
+                // Arbitrum Sepolia network ID: 421614
                 if (chainId !== 421614) {
-                    setNetworkError("Пожалуйста, переключитесь на сеть Arbitrum Sepolia в вашем кошельке");
+                    setNetworkError("Please switch to Arbitrum Sepolia network in your wallet");
                 } else {
                     setNetworkError(null);
                 }
             } catch (err) {
-                console.error("Ошибка при проверке сети:", err);
+                console.error("Error checking network:", err);
             }
         };
-        
+
         checkNetwork();
     }, [signer]);
-    
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
     const handleSubmit = async () => {
         try {
-            // Сначала проверяем сеть
+            // First check the network
             const provider = signer.provider as ethers.BrowserProvider;
             const network = await provider.getNetwork();
             const chainId = Number(network.chainId);
-            
-            // ID сети Arbitrum Sepolia: 421614
+
+            // Arbitrum Sepolia network ID: 421614
             if (chainId !== 421614) {
-                throw new Error("Пожалуйста, переключитесь на сеть Arbitrum Sepolia в вашем кошельке");
+                throw new Error("Please switch to Arbitrum Sepolia network in your wallet");
             }
-            
+
             setLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
-            
+
             const minFrequency = 60;
             const minWaitingPeriod = 120;
-            
+
             const frequency = Math.max(Number(form.frequency), minFrequency);
             const waitingPeriod = Math.max(Number(form.waitingPeriod), minWaitingPeriod);
-            
+
             const transferAmountWei = ethers.parseEther(form.transferAmount);
             const limitWei = ethers.parseEther(form.limit);
-            
+
             if (limitWei < transferAmountWei) {
-                throw new Error("Лимит должен быть больше или равен сумме перевода");
+                throw new Error("Limit must be greater than or equal to transfer amount");
             }
-            
-            // Добавляем gas limit для решения проблемы с estimateGas
-            const gasLimit = ethers.toBigInt(1200000); // Увеличенный gas limit для новых методов безопасности
-            
-            // Логируем параметры для отладки
-            console.log("🔧 Параметры для createSmartWill:");
+
+            // Add gas limit to solve estimateGas problem
+            const gasLimit = ethers.toBigInt(1200000); // Increased gas limit for new security methods
+
+            // Log parameters for debugging
+            console.log("🔧 Parameters for createSmartWill:");
             console.log("- heir:", form.heir);
             console.log("- heirName:", form.heirName);
             console.log("- heirRole:", form.heirRole);
             console.log("- transferAmount:", ethers.formatEther(transferAmountWei), "ETH");
-            console.log("- frequency:", frequency, "секунд");
-            console.log("- waitingPeriod:", waitingPeriod, "секунд");
+            console.log("- frequency:", frequency, "seconds");
+            console.log("- waitingPeriod:", waitingPeriod, "seconds");
             console.log("- limit:", ethers.formatEther(limitWei), "ETH");
             console.log("- value:", ethers.formatEther(limitWei), "ETH");
             console.log("- gasLimit:", gasLimit.toString());
-            
+
             const tx = await factory.createSmartWill(
                 form.heir,
                 form.heirName,
@@ -130,31 +130,31 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                 frequency,
                 waitingPeriod,
                 limitWei,
-                { 
+                {
                     value: limitWei,
-                    gasLimit: gasLimit 
+                    gasLimit: gasLimit
                 }
             );
-            
-            toast({ 
-                title: "Транзакция отправлена", 
-                description: "Ожидание подтверждения...", 
+
+            toast({
+                title: "Transaction sent",
+                description: "Waiting for confirmation...",
                 status: "info",
                 duration: 5000
             });
-            
+
             const receipt = await tx.wait();
             const event = receipt.logs.find((log: any) => log.fragment?.name === "WillCreated");
             const newAddress = event?.args?.willAddress;
-            
+
             if (newAddress) {
-                toast({ 
-                    title: "Завещание создано", 
-                    description: `Новое завещание по адресу: ${newAddress}`, 
+                toast({
+                    title: "Will created",
+                    description: `New will at address: ${newAddress}`,
                     status: "success",
                     duration: 5000
                 });
-                
+
                 setForm({
                     heir: "",
                     heirName: "",
@@ -164,13 +164,13 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                     waitingPeriod: 300,
                     limit: ""
                 });
-                
+
                 onWillCreated(newAddress);
             }
         } catch (err: any) {
-            toast({ 
-                title: "Ошибка", 
-                description: err.message, 
+            toast({
+                title: "Error",
+                description: err.message,
                 status: "error",
                 duration: 5000
             });
@@ -187,104 +187,104 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
     return (
         <VStack spacing={8} align="stretch">
             {networkError && (
-                <Alert 
-                    status="error" 
-                    borderRadius="xl" 
+                <Alert
+                    status="error"
+                    borderRadius="xl"
                     variant="modern"
                     bg={cardBg}
                 >
                     <AlertIcon />
                     <Box>
-                        <AlertTitle>Ошибка сети!</AlertTitle>
+                        <AlertTitle>Network Error!</AlertTitle>
                         <AlertDescription>{networkError}</AlertDescription>
                     </Box>
                 </Alert>
             )}
-            
-            {/* Заголовок */}
+
+            {/* Header */}
             <Box textAlign="center">
                 <HStack justify="center" mb={4}>
                     <Icon as={FaShieldAlt} boxSize={8} color="#081781" />
                     <Heading size="lg" bgGradient="linear(to-r, #081781, #061264)" bgClip="text">
-                        Создание завещания
+                        Create Will
                     </Heading>
                 </HStack>
                 <Text color={textColor} fontSize="lg" maxW="600px" mx="auto">
-                    Создайте умное завещание для безопасной передачи ваших криптоактивов
+                    Create a smart will for secure transfer of your crypto assets
                 </Text>
             </Box>
 
             <Divider />
 
-            {/* Информация о наследнике */}
+            {/* Heir Information */}
             <Box>
                 <HStack mb={6}>
                     <Icon as={FaUser} color="blue.500" />
-                    <Heading size="md">Информация о наследнике</Heading>
+                    <Heading size="md">Heir Information</Heading>
                 </HStack>
-                
+
                 <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
                     <FormControl>
                         <FormLabel fontWeight="semibold" color={textColor}>
-                            Полное имя наследника
+                            Heir Full Name
                         </FormLabel>
-                        <Input 
-                            name="heirName" 
-                            value={form.heirName} 
-                            onChange={handleChange} 
+                        <Input
+                            name="heirName"
+                            value={form.heirName}
+                            onChange={handleChange}
                             bg={inputBg}
                             border="2px solid"
                             borderColor={borderColor}
                             borderRadius="lg"
                             _hover={{ borderColor: "#081781" }}
-                            _focus={{ 
-                                borderColor: "#081781", 
+                            _focus={{
+                                borderColor: "#081781",
                                 boxShadow: "0 0 0 1px #081781",
                                 bg: cardBg
                             }}
-                            placeholder="Иванов Иван Иванович"
+                            placeholder="John Smith"
                             size="lg"
                         />
                     </FormControl>
-                    
+
                     <FormControl>
                         <FormLabel fontWeight="semibold" color={textColor}>
-                            Степень родства
+                            Relationship
                         </FormLabel>
-                        <Input 
-                            name="heirRole" 
-                            value={form.heirRole} 
-                            onChange={handleChange} 
+                        <Input
+                            name="heirRole"
+                            value={form.heirRole}
+                            onChange={handleChange}
                             bg={inputBg}
                             border="2px solid"
                             borderColor={borderColor}
                             borderRadius="lg"
                             _hover={{ borderColor: "#081781" }}
-                            _focus={{ 
-                                borderColor: "#081781", 
+                            _focus={{
+                                borderColor: "#081781",
                                 boxShadow: "0 0 0 1px #081781",
                                 bg: cardBg
                             }}
-                            placeholder="Сын, дочь, супруг(а)"
+                            placeholder="Son, Daughter, Spouse"
                             size="lg"
                         />
                     </FormControl>
-                    
+
                     <FormControl gridColumn={{ md: "span 2" }}>
                         <FormLabel fontWeight="semibold" color={textColor}>
-                            Адрес кошелька наследника
+                            Heir Wallet Address
                         </FormLabel>
-                        <Input 
-                            name="heir" 
-                            value={form.heir} 
-                            onChange={handleChange} 
+                        <Input
+                            name="heir"
+                            value={form.heir}
+                            onChange={handleChange}
                             bg={inputBg}
                             border="2px solid"
                             borderColor={borderColor}
                             borderRadius="lg"
                             _hover={{ borderColor: "#081781" }}
-                            _focus={{ 
-                                borderColor: "#081781", 
+                            _focus={{
+                                borderColor: "#081781",
                                 boxShadow: "0 0 0 1px #081781",
                                 bg: cardBg
                             }}
@@ -293,7 +293,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                             size="lg"
                         />
                         <Text fontSize="sm" color={textColor} mt={2}>
-                            Ethereum-адрес кошелька, на который будут переводиться средства
+                            Ethereum address of the wallet where funds will be transferred
                         </Text>
                     </FormControl>
                 </Grid>
@@ -301,29 +301,29 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
 
             <Divider />
 
-            {/* Финансовые параметры */}
+            {/* Financial Parameters */}
             <Box>
                 <HStack mb={6}>
                     <Icon as={FaEthereum} color="green.500" />
-                    <Heading size="md">Финансовые параметры</Heading>
+                    <Heading size="md">Financial Parameters</Heading>
                 </HStack>
-                
+
                 <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
                     <FormControl>
                         <FormLabel fontWeight="semibold" color={textColor}>
-                            Сумма регулярного перевода (ETH)
+                            Regular Transfer Amount (ETH)
                         </FormLabel>
-                        <Input 
-                            name="transferAmount" 
-                            value={form.transferAmount} 
-                            onChange={handleChange} 
+                        <Input
+                            name="transferAmount"
+                            value={form.transferAmount}
+                            onChange={handleChange}
                             bg={inputBg}
                             border="2px solid"
                             borderColor={borderColor}
                             borderRadius="lg"
                             _hover={{ borderColor: "#081781" }}
-                            _focus={{ 
-                                borderColor: "#081781", 
+                            _focus={{
+                                borderColor: "#081781",
                                 boxShadow: "0 0 0 1px #081781",
                                 bg: cardBg
                             }}
@@ -333,25 +333,25 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                             size="lg"
                         />
                         <Text fontSize="sm" color={textColor} mt={2}>
-                            Сумма, которая будет переводиться наследнику регулярно
+                            Amount that will be transferred to heir regularly
                         </Text>
                     </FormControl>
-                    
+
                     <FormControl>
                         <FormLabel fontWeight="semibold" color={textColor}>
-                            Общий лимит (ETH)
+                            Total Limit (ETH)
                         </FormLabel>
-                        <Input 
-                            name="limit" 
-                            value={form.limit} 
-                            onChange={handleChange} 
+                        <Input
+                            name="limit"
+                            value={form.limit}
+                            onChange={handleChange}
                             bg={inputBg}
                             border="2px solid"
                             borderColor={borderColor}
                             borderRadius="lg"
                             _hover={{ borderColor: "#081781" }}
-                            _focus={{ 
-                                borderColor: "#081781", 
+                            _focus={{
+                                borderColor: "#081781",
                                 boxShadow: "0 0 0 1px #081781",
                                 bg: cardBg
                             }}
@@ -361,7 +361,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                             size="lg"
                         />
                         <Text fontSize="sm" color={textColor} mt={2}>
-                            Максимальная сумма, которая может быть переведена
+                            Maximum amount that can be transferred
                         </Text>
                     </FormControl>
                 </Grid>
@@ -369,32 +369,32 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
 
             <Divider />
 
-            {/* Временные параметры */}
+            {/* Time Parameters */}
             <Box>
                 <HStack mb={6}>
                     <Icon as={FaClock} color="orange.500" />
-                    <Heading size="md">Временные параметры</Heading>
+                    <Heading size="md">Time Parameters</Heading>
                 </HStack>
-                
+
                 <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
                     <FormControl>
                         <FormLabel fontWeight="semibold" color={textColor}>
-                            Частота выплат (секунды)
+                            Payment Frequency (seconds)
                         </FormLabel>
-                        <NumberInput 
-                            value={form.frequency} 
+                        <NumberInput
+                            value={form.frequency}
                             onChange={(value) => setForm({ ...form, frequency: Number(value) })}
                             min={60}
                             size="lg"
                         >
-                            <NumberInputField 
+                            <NumberInputField
                                 bg={inputBg}
                                 border="2px solid"
                                 borderColor={borderColor}
                                 borderRadius="lg"
                                 _hover={{ borderColor: "#081781" }}
-                                _focus={{ 
-                                    borderColor: "#081781", 
+                                _focus={{
+                                    borderColor: "#081781",
                                     boxShadow: "0 0 0 1px #081781",
                                     bg: cardBg
                                 }}
@@ -406,32 +406,32 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                         </NumberInput>
                         <HStack mt={2} spacing={2}>
                             <Badge colorScheme="blue" variant="subtle">
-                                Минимум: 60 сек
+                                Minimum: 60 sec
                             </Badge>
                             <Text fontSize="sm" color={textColor}>
-                                ({Math.round(form.frequency / 60)} мин)
+                                ({Math.round(form.frequency / 60)} min)
                             </Text>
                         </HStack>
                     </FormControl>
-                    
+
                     <FormControl>
                         <FormLabel fontWeight="semibold" color={textColor}>
-                            Период ожидания (секунды)
+                            Waiting Period (seconds)
                         </FormLabel>
-                        <NumberInput 
-                            value={form.waitingPeriod} 
+                        <NumberInput
+                            value={form.waitingPeriod}
                             onChange={(value) => setForm({ ...form, waitingPeriod: Number(value) })}
                             min={120}
                             size="lg"
                         >
-                            <NumberInputField 
+                            <NumberInputField
                                 bg={inputBg}
                                 border="2px solid"
                                 borderColor={borderColor}
                                 borderRadius="lg"
                                 _hover={{ borderColor: "#081781" }}
-                                _focus={{ 
-                                    borderColor: "#081781", 
+                                _focus={{
+                                    borderColor: "#081781",
                                     boxShadow: "0 0 0 1px #081781",
                                     bg: cardBg
                                 }}
@@ -443,36 +443,36 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                         </NumberInput>
                         <HStack mt={2} spacing={2}>
                             <Badge colorScheme="orange" variant="subtle">
-                                Минимум: 120 сек
+                                Minimum: 120 sec
                             </Badge>
                             <Text fontSize="sm" color={textColor}>
-                                ({Math.round(form.waitingPeriod / 60)} мин)
+                                ({Math.round(form.waitingPeriod / 60)} min)
                             </Text>
                         </HStack>
                     </FormControl>
                 </Grid>
-                
+
                 <Box mt={4} p={4} bg={useColorModeValue('blue.50', 'blue.900')} borderRadius="lg">
                     <Text fontSize="sm" color={textColor}>
-                        <strong>Период ожидания</strong> - время, через которое наследник сможет получить средства, 
-                        если вы не проявляете активность в сети.
+                        <strong>Waiting Period</strong> - time after which the heir will be able to receive funds
+                        if you do not show activity on the network.
                     </Text>
                 </Box>
             </Box>
 
-            {/* Кнопка создания */}
+            {/* Create button */}
             <Box pt={4}>
-                <Button 
-                    colorScheme="purple" 
-                    onClick={handleSubmit} 
+                <Button
+                    colorScheme="purple"
+                    onClick={handleSubmit}
                     isLoading={loading}
-                    loadingText="Создание завещания..."
+                    loadingText="Creating will..."
                     isDisabled={
-                        !form.heir || 
-                        !form.heirName || 
-                        !form.heirRole || 
-                        !form.transferAmount || 
-                        !form.limit || 
+                        !form.heir ||
+                        !form.heirName ||
+                        !form.heirRole ||
+                        !form.transferAmount ||
+                        !form.limit ||
                         !!networkError ||
                         parseFloat(form.limit) < parseFloat(form.transferAmount)
                     }
@@ -482,24 +482,24 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                     fontSize="lg"
                     fontWeight="bold"
                     bgGradient="linear(to-r, #081781, #061264)"
-                    _hover={{ 
+                    _hover={{
                         bgGradient: "linear(to-r, #061264, #040d47)",
-                        transform: "translateY(-2px)", 
-                        boxShadow: "xl" 
+                        transform: "translateY(-2px)",
+                        boxShadow: "xl"
                     }}
                     _active={{ transform: "translateY(0)" }}
                     transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
                     borderRadius="xl"
                     leftIcon={<Icon as={FaShieldAlt} />}
                 >
-                    Создать умное завещание
+                    Create Smart Will
                 </Button>
-                
+
                 {parseFloat(form.limit) < parseFloat(form.transferAmount) && form.limit && form.transferAmount && (
                     <Alert status="warning" mt={4} borderRadius="lg" variant="modern">
                         <AlertIcon />
                         <AlertDescription>
-                            Лимит должен быть больше или равен сумме перевода
+                            Limit must be greater than or equal to transfer amount
                         </AlertDescription>
                     </Alert>
                 )}

@@ -38,7 +38,7 @@ interface MyWillsProps {
     factoryAddress: string;
 }
 
-// Экспортируем тип для использования в других компонентах
+// Export type for use in other components
 export interface WillInfo {
     address: string;
     balance: string;
@@ -51,10 +51,10 @@ export interface WillInfo {
     limit: string;
 }
 
-// Изменяем на forwardRef и экспортируем методы через useImperativeHandle
+// Change to forwardRef and export methods via useImperativeHandle
 const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const [wills, setWills] = useState<WillInfo[]>([]);
-    const [lastPing, setLastPing] = useState<string>("Загрузка...");
+    const [lastPing, setLastPing] = useState<string>("Loading...");
     const [loading, setLoading] = useState(false);
     const [pingLoading, setPingLoading] = useState(false);
     const toast = useToast();
@@ -63,25 +63,25 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const textColor = useColorModeValue('gray.600', 'gray.300');
     const borderColor = useColorModeValue('gray.200', 'gray.600');
 
-    // Функция для форматирования времени в секундах в читаемый формат
+    // Function to format time in seconds to readable format
     const formatTime = (seconds: number): string => {
-        if (seconds < 60) return `${seconds} сек.`;
+        if (seconds < 60) return `${seconds} sec.`;
         if (seconds < 3600) {
             const minutes = Math.floor(seconds / 60);
-            return `${minutes} мин.`;
+            return `${minutes} min.`;
         }
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
-        if (minutes === 0) return `${hours} ч.`;
-        return `${hours} ч. ${minutes} мин.`;
+        if (minutes === 0) return `${hours} h.`;
+        return `${hours} h. ${minutes} min.`;
     };
 
-    // Получение информации о завещании
+    // Get will information
     const fetchWillInfo = async (willAddress: string, retryCount = 3, delayMs = 1000) => {
         try {
             const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
 
-            // Получаем основную информацию из контракта завещания
+            // Get main information from will contract
             const [balance, heir, heirName, heirRole, transferAmount, transferFrequency, waitingPeriod, limit] = await Promise.all([
                 contract.getBalance(),
                 contract.heir(),
@@ -105,35 +105,35 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 limit: ethers.formatEther(limit)
             };
         } catch (error) {
-            console.error(`Ошибка при получении информации о завещании ${willAddress}:`, error);
+            console.error(`Error getting will information ${willAddress}:`, error);
 
-            // Если у нас остались попытки, ждем и пробуем снова
+            // If we have retries left, wait and try again
             if (retryCount > 0) {
-                console.log(`Повторная попытка (осталось ${retryCount}) для контракта ${willAddress} через ${delayMs}мс...`);
+                console.log(`Retry attempt (${retryCount} left) for contract ${willAddress} after ${delayMs}ms...`);
 
-                // Ожидаем указанное время
+                // Wait for specified time
                 await new Promise(resolve => setTimeout(resolve, delayMs));
 
-                // Рекурсивно вызываем функцию с уменьшенным счетчиком попыток
+                // Recursively call function with decreased retry counter
                 return fetchWillInfo(willAddress, retryCount - 1, delayMs * 1.5);
             }
 
-            // Возвращаем базовую информацию, когда закончились попытки
+            // Return basic information when retries are exhausted
             return {
                 address: willAddress,
-                balance: "Загрузка...",
-                heir: "Загрузка...",
-                heirName: "Загрузка...",
-                heirRole: "Загрузка...",
-                transferAmount: "Загрузка...",
-                transferFrequency: "Загрузка...",
-                waitingPeriod: "Загрузка...",
-                limit: "Загрузка..."
+                balance: "Loading...",
+                heir: "Loading...",
+                heirName: "Loading...",
+                heirRole: "Loading...",
+                transferAmount: "Loading...",
+                transferFrequency: "Loading...",
+                waitingPeriod: "Loading...",
+                limit: "Loading..."
             };
         }
     };
 
-    // Получение последнего пинга из фабрики
+    // Get last ping from factory
     const fetchLastPing = async () => {
         try {
             if (!signer) return;
@@ -141,9 +141,9 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
             const signerAddress = await signer.getAddress();
 
-            // Пробуем получить последний пинг разными способами
+            // Try to get last ping in different ways
             try {
-                // Сначала пробуем вызвать getLastPing()
+                // First try calling getLastPing()
                 try {
                     const lastPingTimestamp = await factory.getLastPing();
 
@@ -152,10 +152,10 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                         return;
                     }
                 } catch (error) {
-                    console.error("Не удалось получить lastPing через getLastPing():", error);
+                    console.error("Failed to get lastPing via getLastPing():", error);
                 }
 
-                // Затем пробуем получить через отображение lastPings
+                // Then try to get via lastPings mapping
                 try {
                     const lastPingTimestamp = await factory.lastPings(signerAddress);
 
@@ -164,10 +164,10 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                         return;
                     }
                 } catch (error) {
-                    console.error("Не удалось получить lastPing через lastPings:", error);
+                    console.error("Failed to get lastPing via lastPings:", error);
                 }
 
-                // Пробуем через getLastPingOf, если он реализован
+                // Try via getLastPingOf if implemented
                 try {
                     const lastPingTimestamp = await factory.getLastPingOf(signerAddress);
 
@@ -176,71 +176,71 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                         return;
                     }
                 } catch (error) {
-                    console.error("Не удалось получить lastPing через getLastPingOf:", error);
+                    console.error("Failed to get lastPing via getLastPingOf:", error);
                 }
 
-                setLastPing("Нет данных о последнем пинге");
+                setLastPing("No last ping data");
             } catch (error) {
-                console.error("Все методы получения lastPing не сработали:", error);
-                setLastPing("Ошибка получения данных");
+                console.error("All lastPing methods failed:", error);
+                setLastPing("Error getting data");
             }
         } catch (error) {
-            console.error("Ошибка при получении информации о последнем пинге:", error);
-            setLastPing("Ошибка получения данных");
+            console.error("Error getting last ping information:", error);
+            setLastPing("Error getting data");
         }
     };
 
-    // Отправляет пинг в фабрику
+    // Send ping to factory
     const handlePingAll = async () => {
         try {
-            // Сначала проверяем сеть
+            // First check the network
             const provider = signer.provider as ethers.BrowserProvider;
             const network = await provider.getNetwork();
             const chainId = Number(network.chainId);
 
-            // ID сети Arbitrum Sepolia: 421614
+            // Arbitrum Sepolia network ID: 421614
             if (chainId !== 421614) {
-                throw new Error("Пожалуйста, переключитесь на сеть Arbitrum Sepolia в вашем кошельке");
+                throw new Error("Please switch to Arbitrum Sepolia network in your wallet");
             }
 
             setPingLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
 
-            console.log("📤 Отправка ping...");
+            console.log("📤 Sending ping...");
 
-            // Отправляем один пинг в фабрику
+            // Send one ping to factory
             const pingTx = await factory.ping();
-            console.log("⏳ Ожидаем подтверждения транзакции ping...");
+            console.log("⏳ Waiting for ping transaction confirmation...");
 
-            // Ожидаем подтверждения транзакции
+            // Wait for transaction confirmation
             await pingTx.wait();
-            console.log("✅ Транзакция ping подтверждена:", pingTx.hash);
+            console.log("✅ Ping transaction confirmed:", pingTx.hash);
 
-            // Добавляем задержку для обновления состояния в блокчейне
-            console.log("⏳ Ожидаем обновления состояния в блокчейне...");
+            // Add delay for blockchain state update
+            console.log("⏳ Waiting for blockchain state update...");
             await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // Обновляем информацию о последнем пинге несколько раз для надежности
+            // Update last ping information multiple times for reliability
             let pingUpdated = false;
             for (let attempt = 1; attempt <= 3; attempt++) {
-                console.log(`🔄 Попытка ${attempt} обновления информации о ping...`);
+                console.log(`🔄 Attempt ${attempt} to update ping information...`);
                 await fetchLastPing();
 
-                // Проверяем, обновилось ли время (примерно должно быть в пределах последних 5 минут)
+                // Check if time was updated (should be within last 5 minutes)
                 const currentTime = new Date();
                 const fiveMinutesAgo = new Date(currentTime.getTime() - 5 * 60 * 1000);
 
-                // Если lastPing содержит "Нет данных" или "Ошибка", пробуем еще раз
-                if (!lastPing.includes("Нет данных") && !lastPing.includes("Ошибка")) {
+                // If lastPing contains "No data" or "Error", try again
+                if (!lastPing.includes("No data") && !lastPing.includes("Error")) {
                     try {
                         const lastPingDate = new Date(lastPing);
                         if (lastPingDate > fiveMinutesAgo) {
-                            console.log("✅ Время ping успешно обновлено");
+                            console.log("✅ Ping time successfully updated");
                             pingUpdated = true;
                             break;
                         }
                     } catch (dateError) {
-                        console.log("⚠️ Ошибка парсинга даты, пробуем снова...");
+                        console.log("⚠️ Date parsing error, trying again...");
                     }
                 }
 
@@ -250,22 +250,22 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             }
 
             if (!pingUpdated) {
-                console.log("⚠️ Время ping может быть не полностью обновлено, но операция выполнена");
+                console.log("⚠️ Ping time may not be fully updated, but operation completed");
             }
 
             toast({
-                title: "Успешно!",
-                description: `Вы подтвердили, что живы. Время обновлено.`,
+                title: "Success!",
+                description: `You confirmed that you are alive. Time updated.`,
                 status: "success",
                 duration: 5000,
                 isClosable: true,
             });
 
         } catch (error) {
-            console.error("Ошибка при отправке пинга:", error);
+            console.error("Error sending ping:", error);
             toast({
-                title: "Ошибка",
-                description: "Не удалось подтвердить, что вы живы. Проверьте консоль для деталей.",
+                title: "Error",
+                description: "Failed to confirm that you are alive. Check console for details.",
                 status: "error",
                 duration: 5000,
                 isClosable: true,
@@ -275,92 +275,92 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
         }
     };
 
-    // Метод для загрузки завещаний
+    // Method to load wills
     const loadWills = async () => {
         try {
             setLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
             const userAddress = await signer.getAddress();
 
-            console.log("🔍 Диагностика загрузки завещаний:");
-            console.log("👤 Адрес пользователя:", userAddress);
-            console.log("🏭 Адрес фабрики:", factoryAddress);
+            console.log("🔍 Wills loading diagnostics:");
+            console.log("👤 User address:", userAddress);
+            console.log("🏭 Factory address:", factoryAddress);
 
-            // Получаем только завещания текущего пользователя (безопасно)
+            // Get only current user's wills (safely)
             let willsList = [];
             try {
-                // Используем безопасный метод getMyWills()
+                // Use safe getMyWills() method
                 willsList = await factory.getMyWills();
-                console.log("✅ Найдено завещаний текущего пользователя:", willsList.length);
-                console.log("📄 Адреса завещаний:", willsList);
+                console.log("✅ Found current user's wills:", willsList.length);
+                console.log("📄 Will addresses:", willsList);
             } catch (error) {
-                console.error("❌ Ошибка при вызове getMyWills:", error);
-                // Если новый метод недоступен, возвращаем пустой массив
+                console.error("❌ Error calling getMyWills:", error);
+                // If new method is unavailable, return empty array
                 willsList = [];
             }
 
-            // Дополнительная диагностика: проверяем общее количество завещаний
+            // Additional diagnostics: check total number of wills
             try {
                 const allWills = await factory.getDeployedWills();
-                console.log("📊 Всего завещаний в фабрике:", allWills.length);
-                console.log("🔗 Адреса всех завещаний:", allWills);
+                console.log("📊 Total wills in factory:", allWills.length);
+                console.log("🔗 All will addresses:", allWills);
 
-                // Проверяем mapping для текущего пользователя
+                // Check mapping for current user
                 try {
                     const userWillsFromMapping = await factory.ownerToWills(userAddress, 0);
-                    console.log("🗂️ Первое завещание из mapping:", userWillsFromMapping);
+                    console.log("🗂️ First will from mapping:", userWillsFromMapping);
                 } catch (mappingError) {
-                    console.log("📝 Mapping пуст для пользователя (это нормально, если завещаний нет)");
+                    console.log("📝 Mapping empty for user (normal if no wills exist)");
                 }
             } catch (debugError) {
-                console.error("⚠️ Ошибка при получении отладочной информации:", debugError);
+                console.error("⚠️ Error getting debug information:", debugError);
             }
 
-            // Если список завещаний пуст, завершаем работу
+            // If wills list is empty, finish work
             if (willsList.length === 0) {
-                console.log("❌ Завещания не найдены для текущего пользователя");
+                console.log("❌ No wills found for current user");
                 setWills([]);
                 return;
             }
 
-            // Добавляем небольшую задержку перед запросом информации о завещаниях,
-            // чтобы дать блокчейну время на обработку транзакций
+            // Add small delay before requesting will information,
+            // to give blockchain time to process transactions
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            // Получаем информацию о каждом завещании
+            // Get information about each will
             const willsInfo = await Promise.all(
                 willsList.map((address: string) => fetchWillInfo(address))
             );
 
-            // Теперь отображаем только завещания текущего пользователя
+            // Now display only current user's wills
             const validWills = willsInfo.filter(Boolean) as WillInfo[];
-            console.log("✅ Валидных завещаний пользователя:", validWills.length);
+            console.log("✅ Valid user wills:", validWills.length);
 
             setWills(validWills);
 
-            // Получаем информацию о последнем пинге
+            // Get last ping information
             await fetchLastPing();
 
-            // Дополнительное обновление через секунду для надежности
+            // Additional update after a second for reliability
             setTimeout(async () => {
                 await fetchLastPing();
             }, 1000);
         } catch (error) {
-            console.error("💥 Общая ошибка при загрузке завещаний:", error);
+            console.error("💥 General error loading wills:", error);
         } finally {
             setLoading(false);
         }
     };
 
-    // Экспортируем методы через ref
+    // Export methods via ref
     useImperativeHandle(ref, () => ({
         loadWills,
         refreshWills: () => {
             if (signer) {
                 loadWills();
                 toast({
-                    title: "Обновление данных",
-                    description: "Загрузка последних данных о завещаниях...",
+                    title: "Data Update",
+                    description: "Loading latest will data...",
                     status: "info",
                     duration: 2000,
                     isClosable: true
@@ -369,20 +369,20 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
         }
     }));
 
-    // Хук загрузки при монтировании
+    // Loading hook on mount
     useEffect(() => {
         if (signer) {
             loadWills();
         }
     }, [signer]);
 
-    // Метод для принудительного обновления данных
+    // Method to force data refresh
     const refreshWills = () => {
         if (signer) {
             loadWills();
             toast({
-                title: "Обновление данных",
-                description: "Загрузка последних данных о завещаниях...",
+                title: "Data Update",
+                description: "Loading latest will data...",
                 status: "info",
                 duration: 2000,
                 isClosable: true
@@ -392,15 +392,15 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
 
     return (
         <VStack spacing={8} align="stretch" w="100%">
-            {/* Диагностическая информация */}
+            {/* Diagnostic information */}
             <DiagnosticInfo signer={signer} factoryAddress={factoryAddress} />
 
-            {/* Заголовок с кнопкой обновления */}
+            {/* Header with refresh button */}
             <Flex justifyContent="space-between" alignItems="center">
                 <HStack spacing={3}>
                     <Icon as={FaFileContract} boxSize={6} color="#081781" />
                     <Heading size="lg" bgGradient="linear(to-r, #081781, #061264)" bgClip="text">
-                        Мои завещания
+                        My Wills
                     </Heading>
                 </HStack>
                 <Button
@@ -422,7 +422,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                     }}
                     transition="all 0.2s"
                 >
-                    Обновить
+                    Refresh
                 </Button>
             </Flex>
 
@@ -431,7 +431,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                     <VStack spacing={6}>
                         <Spinner size="xl" color="#081781" thickness="4px" speed="0.8s" />
                         <Text fontSize="lg" color={textColor} fontWeight="medium">
-                            Загрузка завещаний...
+                            Loading wills...
                         </Text>
                     </VStack>
                 </Center>
@@ -441,24 +441,24 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                         <Icon as={FaFileContract} boxSize={16} color="gray.300" />
                         <VStack spacing={2}>
                             <Heading size="md" color={textColor}>
-                                У вас пока нет завещаний
+                                You don't have any wills yet
                             </Heading>
                             <Text fontSize="lg" color={textColor}>
-                                Создайте новое завещание, чтобы начать управлять своими активами
+                                Create a new will to start managing your assets
                             </Text>
                         </VStack>
                     </VStack>
                 </Box>
             ) : (
                 <>
-                    {/* Статистика */}
+                    {/* Statistics */}
                     <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
                         <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
                             <CardBody>
                                 <Stat>
-                                    <StatLabel color={textColor}>Всего завещаний</StatLabel>
+                                    <StatLabel color={textColor}>Total Wills</StatLabel>
                                     <StatNumber color="#081781">{wills.length}</StatNumber>
-                                    <StatHelpText>Активных контрактов</StatHelpText>
+                                    <StatHelpText>Active contracts</StatHelpText>
                                 </Stat>
                             </CardBody>
                         </Card>
@@ -466,11 +466,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                         <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
                             <CardBody>
                                 <Stat>
-                                    <StatLabel color={textColor}>Общий баланс</StatLabel>
+                                    <StatLabel color={textColor}>Total Balance</StatLabel>
                                     <StatNumber color="green.500">
                                         {wills.reduce((sum, will) => sum + parseFloat(will.balance || '0'), 0).toFixed(4)} ETH
                                     </StatNumber>
-                                    <StatHelpText>Во всех завещаниях</StatHelpText>
+                                    <StatHelpText>In all wills</StatHelpText>
                                 </Stat>
                             </CardBody>
                         </Card>
@@ -478,17 +478,17 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                         <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
                             <CardBody>
                                 <Stat>
-                                    <StatLabel color={textColor}>Последняя активность</StatLabel>
+                                    <StatLabel color={textColor}>Last Activity</StatLabel>
                                     <StatNumber fontSize="md" color="blue.500">
                                         {lastPing}
                                     </StatNumber>
-                                    <StatHelpText>Подтверждение жизни</StatHelpText>
+                                    <StatHelpText>Life Confirmation</StatHelpText>
                                 </Stat>
                             </CardBody>
                         </Card>
                     </SimpleGrid>
 
-                    {/* Список завещаний */}
+                    {/* Wills list */}
                     <VStack spacing={6} align="stretch">
                         {wills.map((will, index) => (
                             <Card
@@ -519,19 +519,19 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                             </VStack>
                                         </HStack>
                                         <Badge colorScheme="green" variant="outline" fontSize="sm" px={3} py={1}>
-                                            Завещание #{index + 1}
+                                            Will #{index + 1}
                                         </Badge>
                                     </HStack>
                                 </CardHeader>
 
                                 <CardBody pt={2}>
                                     <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                                        {/* Информация о наследнике */}
+                                        {/* Heir information */}
                                         <VStack align="start" spacing={3}>
                                             <HStack>
                                                 <Icon as={FaWallet} color="gray.500" />
                                                 <Text fontSize="sm" fontWeight="semibold" color={textColor}>
-                                                    Кошелек наследника
+                                                    Heir Wallet
                                                 </Text>
                                             </HStack>
                                             <Text fontSize="sm" fontFamily="monospace" color="blue.500">
@@ -539,44 +539,44 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                             </Text>
                                         </VStack>
 
-                                        {/* Финансовая информация */}
+                                        {/* Financial information */}
                                         <VStack align="start" spacing={3}>
                                             <HStack>
                                                 <Icon as={FaEthereum} color="gray.500" />
                                                 <Text fontSize="sm" fontWeight="semibold" color={textColor}>
-                                                    Финансы
+                                                    Funds
                                                 </Text>
                                             </HStack>
                                             <VStack align="start" spacing={1}>
                                                 <Text fontSize="sm">
-                                                    <strong>Баланс:</strong> {will.balance} ETH
+                                                    <strong>Balance:</strong> {will.balance} ETH
                                                 </Text>
                                                 <Text fontSize="sm">
-                                                    <strong>Перевод:</strong> {will.transferAmount} ETH
+                                                    <strong>Transfer:</strong> {will.transferAmount} ETH
                                                 </Text>
                                                 <Text fontSize="sm">
-                                                    <strong>Лимит:</strong> {will.limit} ETH
+                                                    <strong>Limit:</strong> {will.limit} ETH
                                                 </Text>
                                             </VStack>
                                         </VStack>
 
-                                        {/* Временная информация */}
+                                        {/* Time information */}
                                         <VStack align="start" spacing={3}>
                                             <HStack>
                                                 <Icon as={FaClock} color="gray.500" />
                                                 <Text fontSize="sm" fontWeight="semibold" color={textColor}>
-                                                    Временные настройки
+                                                    Time Settings
                                                 </Text>
                                             </HStack>
                                             <VStack align="start" spacing={1}>
                                                 <Text fontSize="sm">
-                                                    <strong>Частота выплат:</strong>{" "}
+                                                    <strong>Transfer Frequency:</strong>{" "}
                                                     <Badge colorScheme="orange" variant="subtle" borderRadius="md">
                                                         {formatTime(Number(will.transferFrequency))}
                                                     </Badge>
                                                 </Text>
                                                 <Text fontSize="sm">
-                                                    <strong>Период ожидания:</strong>{" "}
+                                                    <strong>Waiting Period:</strong>{" "}
                                                     <Badge colorScheme="purple" variant="subtle" borderRadius="md">
                                                         {formatTime(Number(will.waitingPeriod))}
                                                     </Badge>
@@ -589,7 +589,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
 
                                     <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="lg">
                                         <Text fontSize="xs" color={textColor} fontFamily="monospace">
-                                            <strong>Адрес контракта:</strong> {will.address}
+                                            <strong>Contract Address:</strong> {will.address}
                                         </Text>
                                     </Box>
                                 </CardBody>
@@ -597,7 +597,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                         ))}
                     </VStack>
 
-                    {/* Кнопка подтверждения жизни */}
+                    {/* Life Confirmation button */}
                     <Card
                         bg={useColorModeValue('blue.50', 'blue.900')}
                         borderRadius="xl"
@@ -611,11 +611,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                     <HStack>
                                         <Icon as={FaHeartbeat} color="red.500" boxSize={6} />
                                         <Heading size="md" color="#081781">
-                                            Подтверждение активности
+                                            Life Confirmation
                                         </Heading>
                                     </HStack>
                                     <Text color={textColor} fontSize="sm" maxW="500px">
-                                        Регулярно подтверждайте свою активность, чтобы завещания оставались под вашим контролем
+                                        Regularly confirm your activity to keep your wills under your control
                                     </Text>
                                 </VStack>
 
@@ -624,7 +624,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                     colorScheme="blue"
                                     size="lg"
                                     isLoading={pingLoading}
-                                    loadingText="Отправка подтверждения..."
+                                    loadingText="Sending confirmation..."
                                     width={{ base: "100%", md: "auto" }}
                                     px={12}
                                     py={6}
@@ -642,13 +642,13 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                     transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
                                     borderRadius="xl"
                                 >
-                                    Я жив и здоров!
+                                    I'm Alive and Healthy!
                                 </Button>
 
                                 <Alert status="info" borderRadius="lg" variant="subtle">
                                     <AlertIcon />
                                     <AlertDescription fontSize="sm">
-                                        Последнее подтверждение: <strong>{lastPing}</strong>
+                                        Last confirmation: <strong>{lastPing}</strong>
                                     </AlertDescription>
                                 </Alert>
                             </VStack>
