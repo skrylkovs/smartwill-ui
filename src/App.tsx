@@ -30,7 +30,7 @@ const CONFIG = {
     // Arbiscan API key - replace with your real key
     ARBISCAN_API_KEY: "EER1P87Y4I6R4JT9K3KYRWTVWET72VGH5V",
     // New factory address with security fixes and fallback functions
-    FACTORY_ADDRESS: "0x2D091190CE83F5f1FE1AC09231Dc7550bF571834"
+    FACTORY_ADDRESS: "0xb83Fc3E89cF00E2697Cc6ecFe1cC989C7441CBd9"
 };
 
 // Application mode types

@@ -510,15 +510,15 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                         <Spinner size="xl" color="green.500" thickness="4px" speed="0.8s" />
                         <VStack spacing={2}>
                             <Text fontSize="lg" color={textColor} fontWeight="medium">
-                                Поиск завещаний...
+                                Searching for wills...
                             </Text>
                             {loadingProgress.total > 0 && (
                                 <Text fontSize="sm" color="gray.500">
-                                    Проверено {loadingProgress.current} из {loadingProgress.total} завещаний
+                                    Checked {loadingProgress.current} of {loadingProgress.total} wills
                                 </Text>
                             )}
                             <Text fontSize="xs" color="gray.400">
-                                Запросов выполнено: {requestCountRef.current}
+                                Requests completed: {requestCountRef.current}
                             </Text>
                         </VStack>
                     </VStack>
@@ -641,9 +641,6 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                                 </Text>
                                                 <Text fontSize="sm">
                                                     <strong>Per transfer:</strong> {will.transferAmount} ETH
-                                                </Text>
-                                                <Text fontSize="sm">
-                                                    <strong>Limit:</strong> {will.limit} ETH
                                                 </Text>
                                             </VStack>
                                         </VStack>

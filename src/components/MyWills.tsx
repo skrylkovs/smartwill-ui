@@ -549,13 +549,10 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                             </HStack>
                                             <VStack align="start" spacing={1}>
                                                 <Text fontSize="sm">
-                                                    <strong>Balance:</strong> {will.balance} ETH
-                                                </Text>
-                                                <Text fontSize="sm">
                                                     <strong>Transfer:</strong> {will.transferAmount} ETH
                                                 </Text>
                                                 <Text fontSize="sm">
-                                                    <strong>Limit:</strong> {will.limit} ETH
+                                                    <strong>Balance:</strong> {will.balance} ETH
                                                 </Text>
                                             </VStack>
                                         </VStack>
