@@ -29,8 +29,8 @@ import HeirWills from "./components/HeirWills";
 const CONFIG = {
     // Arbiscan API key - replace with your real key
     ARBISCAN_API_KEY: "EER1P87Y4I6R4JT9K3KYRWTVWET72VGH5V",
-    // New factory address with security fixes
-    FACTORY_ADDRESS: "0x48D5CbBa0c6A47D2d6a8952b85826c3E0ba82ba3"
+    // New factory address with security fixes and fallback functions
+    FACTORY_ADDRESS: "0x2D091190CE83F5f1FE1AC09231Dc7550bF571834"
 };
 
 // Application mode types

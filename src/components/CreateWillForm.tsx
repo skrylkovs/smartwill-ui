@@ -91,7 +91,41 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                 throw new Error("Please switch to Arbitrum Sepolia network in your wallet");
             }
 
+            // Валидация входных данных
+            if (!form.heir || !ethers.isAddress(form.heir)) {
+                throw new Error("Please enter a valid heir wallet address");
+            }
+
+            if (!form.heirName.trim()) {
+                throw new Error("Please enter heir name");
+            }
+
+            if (!form.heirRole.trim()) {
+                throw new Error("Please enter heir relationship");
+            }
+
+            if (!form.transferAmount || parseFloat(form.transferAmount) <= 0) {
+                throw new Error("Please enter a valid transfer amount");
+            }
+
+            if (!form.limit || parseFloat(form.limit) <= 0) {
+                throw new Error("Please enter a valid limit amount");
+            }
+
             setLoading(true);
+
+            // Проверка баланса пользователя
+            const userBalance = await provider.getBalance(await signer.getAddress());
+            const limitWei = ethers.parseEther(form.limit);
+
+            if (userBalance < limitWei) {
+                throw new Error(`Insufficient balance. Required: ${form.limit} ETH, Available: ${ethers.formatEther(userBalance)} ETH`);
+            }
+
+            console.log("🔧 Starting will creation process...");
+            console.log("- Factory Address:", factoryAddress);
+            console.log("- User Balance:", ethers.formatEther(userBalance), "ETH");
+
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
 
             const minFrequency = 60;
@@ -101,14 +135,21 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             const waitingPeriod = Math.max(Number(form.waitingPeriod), minWaitingPeriod);
 
             const transferAmountWei = ethers.parseEther(form.transferAmount);
-            const limitWei = ethers.parseEther(form.limit);
 
             if (limitWei < transferAmountWei) {
                 throw new Error("Limit must be greater than or equal to transfer amount");
             }
 
+            // Явно проверяем, что контракт существует
+            const factoryCode = await provider.getCode(factoryAddress);
+            if (factoryCode === "0x") {
+                throw new Error("Factory contract not found at the specified address");
+            }
+
+            console.log("✅ Factory contract verified");
+
             // Add gas limit to solve estimateGas problem
-            const gasLimit = ethers.toBigInt(1200000); // Increased gas limit for new security methods
+            const gasLimit = ethers.toBigInt(1500000); // Увеличенный лимит газа
 
             // Log parameters for debugging
             console.log("🔧 Parameters for createSmartWill:");
@@ -122,11 +163,31 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             console.log("- value:", ethers.formatEther(limitWei), "ETH");
             console.log("- gasLimit:", gasLimit.toString());
 
+            // Попытка оценки газа
+            try {
+                const estimatedGas = await factory.createSmartWill.estimateGas(
+                    form.heir,
+                    form.heirName,
+                    form.heirRole,
+                    transferAmountWei,
+                    frequency,
+                    waitingPeriod,
+                    limitWei,
+                    {
+                        value: limitWei
+                    }
+                );
+                console.log("⛽ Estimated gas:", estimatedGas.toString());
+            } catch (gasError) {
+                console.warn("⚠️ Gas estimation failed:", gasError);
+                console.log("🔄 Proceeding with manual gas limit...");
+            }
+
             const tx = await factory.createSmartWill(
                 form.heir,
                 form.heirName,
                 form.heirRole,
-                ethers.parseEther(form.transferAmount),
+                transferAmountWei,
                 frequency,
                 waitingPeriod,
                 limitWei,
@@ -136,23 +197,40 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                 }
             );
 
+            console.log("📤 Transaction sent:", tx.hash);
+
             toast({
                 title: "Transaction sent",
-                description: "Waiting for confirmation...",
+                description: `TX Hash: ${tx.hash}`,
                 status: "info",
                 duration: 5000
             });
 
             const receipt = await tx.wait();
-            const event = receipt.logs.find((log: any) => log.fragment?.name === "WillCreated");
-            const newAddress = event?.args?.willAddress;
 
-            if (newAddress) {
+            console.log("📦 Transaction receipt:", receipt);
+
+            if (receipt.status === 0) {
+                throw new Error("Transaction failed. Please check the transaction on Arbiscan.");
+            }
+
+            const event = receipt.logs.find((log: any) => {
+                try {
+                    return log.fragment?.name === "WillCreated";
+                } catch {
+                    return false;
+                }
+            });
+
+            if (event) {
+                const newAddress = event.args?.willAddress;
+                console.log("✅ Will created at address:", newAddress);
+
                 toast({
-                    title: "Will created",
+                    title: "Will created successfully!",
                     description: `New will at address: ${newAddress}`,
                     status: "success",
-                    duration: 5000
+                    duration: 10000
                 });
 
                 setForm({
@@ -166,13 +244,36 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                 });
 
                 onWillCreated(newAddress);
+            } else {
+                console.log("⚠️ WillCreated event not found, but transaction succeeded");
+                console.log("All events:", receipt.logs);
+
+                toast({
+                    title: "Transaction completed",
+                    description: "Transaction succeeded but event parsing failed. Check Arbiscan for details.",
+                    status: "warning",
+                    duration: 10000
+                });
             }
         } catch (err: any) {
+            console.error("❌ Error creating will:", err);
+
+            let errorMessage = err.message;
+
+            // Обработка специфических ошибок
+            if (err.message?.includes("user rejected")) {
+                errorMessage = "Transaction was rejected by user";
+            } else if (err.message?.includes("insufficient funds")) {
+                errorMessage = "Insufficient funds to complete the transaction";
+            } else if (err.message?.includes("execution reverted")) {
+                errorMessage = "Smart contract execution failed. Please check your parameters.";
+            }
+
             toast({
-                title: "Error",
-                description: err.message,
+                title: "Error creating will",
+                description: errorMessage,
                 status: "error",
-                duration: 5000
+                duration: 10000
             });
         } finally {
             setLoading(false);
@@ -469,12 +570,17 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                     loadingText="Creating will..."
                     isDisabled={
                         !form.heir ||
-                        !form.heirName ||
-                        !form.heirRole ||
+                        !ethers.isAddress(form.heir) ||
+                        !form.heirName.trim() ||
+                        !form.heirRole.trim() ||
                         !form.transferAmount ||
+                        parseFloat(form.transferAmount) <= 0 ||
                         !form.limit ||
+                        parseFloat(form.limit) <= 0 ||
                         !!networkError ||
-                        parseFloat(form.limit) < parseFloat(form.transferAmount)
+                        parseFloat(form.limit) < parseFloat(form.transferAmount) ||
+                        form.frequency < 60 ||
+                        form.waitingPeriod < 120
                     }
                     size="xl"
                     width="100%"
@@ -495,11 +601,30 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                     Create Smart Will
                 </Button>
 
+                {/* Validation messages */}
+                {form.heir && !ethers.isAddress(form.heir) && (
+                    <Alert status="error" mt={4} borderRadius="lg" variant="modern">
+                        <AlertIcon />
+                        <AlertDescription>
+                            Please enter a valid Ethereum address for the heir
+                        </AlertDescription>
+                    </Alert>
+                )}
+
                 {parseFloat(form.limit) < parseFloat(form.transferAmount) && form.limit && form.transferAmount && (
                     <Alert status="warning" mt={4} borderRadius="lg" variant="modern">
                         <AlertIcon />
                         <AlertDescription>
                             Limit must be greater than or equal to transfer amount
+                        </AlertDescription>
+                    </Alert>
+                )}
+
+                {(form.frequency < 60 || form.waitingPeriod < 120) && (
+                    <Alert status="warning" mt={4} borderRadius="lg" variant="modern">
+                        <AlertIcon />
+                        <AlertDescription>
+                            Frequency must be at least 60 seconds and waiting period at least 120 seconds
                         </AlertDescription>
                     </Alert>
                 )}
