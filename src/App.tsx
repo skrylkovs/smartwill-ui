@@ -249,10 +249,10 @@ function App() {
                         <HStack spacing={4}>
                             <Icon as={FaShieldAlt} boxSize={8} color="white" />
                             <VStack align="start" spacing={0}>
-                                <Heading size="lg" color="white" fontWeight="bold">
+                                <Heading fontSize={{ base: "3xl", xl: "3xl" }} color="white" fontWeight="bold">
                                     SmartWill
                                 </Heading>
-                                <Text fontSize="sm" color="whiteAlpha.800">
+                                <Text fontSize={{ base: "xl", xl: "sm" }} color="whiteAlpha.800">
                                     {account ?
                                         (appMode === "testator" ?
                                             "Create and manage wills" :
@@ -274,7 +274,7 @@ function App() {
                                             <FormLabel
                                                 htmlFor="mode-switch"
                                                 mb={0}
-                                                fontSize="sm"
+                                                fontSize={{ base: "xl", xl: "sm" }}
                                                 color={appMode === "testator" ? "white" : "whiteAlpha.600"}
                                                 fontWeight={appMode === "testator" ? "bold" : "normal"}
                                             >
@@ -292,7 +292,7 @@ function App() {
                                             <FormLabel
                                                 htmlFor="mode-switch"
                                                 mb={0}
-                                                fontSize="sm"
+                                                fontSize={{ base: "xl", xl: "sm" }}
                                                 color={appMode === "heir" ? "white" : "whiteAlpha.600"}
                                                 fontWeight={appMode === "heir" ? "bold" : "normal"}
                                             >
@@ -305,7 +305,7 @@ function App() {
                                 <Badge
                                     colorScheme={appMode === "testator" ? "blue" : "orange"}
                                     variant="solid"
-                                    fontSize="xs"
+                                    fontSize={{ base: "lg", xl: "xs" }}
                                     bg={appMode === "testator" ? "blue.100" : "orange.100"}
                                     color={appMode === "testator" ? "blue.800" : "orange.800"}
                                     px={3}
@@ -322,14 +322,14 @@ function App() {
                                 <VStack align="end" spacing={1}>
                                     <HStack>
                                         <Icon as={FaWallet} color="white" />
-                                        <Text fontSize="sm" color="white" fontWeight="medium">
+                                        <Text fontSize={{ base: "xl", xl: "sm" }} color="white" fontWeight="medium">
                                             {`${account.slice(0, 6)}...${account.slice(-4)}`}
                                         </Text>
                                     </HStack>
                                     <Badge
                                         colorScheme="blue"
                                         variant="solid"
-                                        fontSize="xs"
+                                        fontSize={{ base: "lg", xl: "xs" }}
                                         bg="blue.100"
                                         color="blue.800"
                                         px={3}
@@ -357,8 +357,8 @@ function App() {
                         >
                             <AlertIcon />
                             <Box>
-                                <AlertTitle>Wrong Network!</AlertTitle>
-                                <AlertDescription>
+                                <AlertTitle fontSize={{ base: "2xl", xl: "md" }}>Wrong Network!</AlertTitle>
+                                <AlertDescription fontSize={{ base: "xl", xl: "sm" }}>
                                     You are connected to {network.name || `Chain ID: ${network.chainId}`}.
                                     Please switch to Arbitrum Sepolia in your wallet.
                                 </AlertDescription>
@@ -371,10 +371,10 @@ function App() {
                             <VStack spacing={8}>
                                 <VStack spacing={4}>
                                     <Icon as={FaFileContract} boxSize={16} color="#081781" />
-                                    <Heading size="2xl" bgGradient="linear(to-r, #081781, #061264)" bgClip="text">
+                                    <Heading size={{ base: "4xl", xl: "2xl" }} bgGradient="linear(to-r, #081781, #061264)" bgClip="text">
                                         Manage Your Digital Assets
                                     </Heading>
-                                    <Text fontSize="xl" color={textColor} maxW="700px" lineHeight="tall">
+                                    <Text fontSize={{ base: "2xl", xl: "xl" }} color={textColor} maxW="700px" lineHeight="tall">
                                         SmartWill helps create smart wills on blockchain,
                                         ensuring secure transfer of your crypto assets to heirs.
                                     </Text>
@@ -384,22 +384,22 @@ function App() {
                                 <HStack spacing={8} pt={8}>
                                     <VStack spacing={2}>
                                         <Icon as={FaShieldAlt} boxSize={8} color="green.500" />
-                                        <Text fontWeight="semibold">Security</Text>
-                                        <Text fontSize="sm" color={textColor} textAlign="center">
+                                        <Text fontWeight="semibold" fontSize={{ base: "2xl", xl: "md" }}>Security</Text>
+                                        <Text fontSize={{ base: "xl", xl: "sm" }} color={textColor} textAlign="center">
                                             Protected by blockchain
                                         </Text>
                                     </VStack>
                                     <VStack spacing={2}>
                                         <Icon as={FaFileContract} boxSize={8} color="blue.500" />
-                                        <Text fontWeight="semibold">Automation</Text>
-                                        <Text fontSize="sm" color={textColor} textAlign="center">
+                                        <Text fontWeight="semibold" fontSize={{ base: "2xl", xl: "md" }}>Automation</Text>
+                                        <Text fontSize={{ base: "xl", xl: "sm" }} color={textColor} textAlign="center">
                                             Smart contracts
                                         </Text>
                                     </VStack>
                                     <VStack spacing={2}>
                                         <Icon as={FaWallet} boxSize={8} color="#081781" />
-                                        <Text fontWeight="semibold">Simplicity</Text>
-                                        <Text fontSize="sm" color={textColor} textAlign="center">
+                                        <Text fontWeight="semibold" fontSize={{ base: "2xl", xl: "md" }}>Simplicity</Text>
+                                        <Text fontSize={{ base: "xl", xl: "sm" }} color={textColor} textAlign="center">
                                             Easy management
                                         </Text>
                                     </VStack>
@@ -411,7 +411,7 @@ function App() {
                                     colorScheme="purple"
                                     px={12}
                                     py={6}
-                                    fontSize="lg"
+                                    fontSize={{ base: "2xl", xl: "lg" }}
                                     leftIcon={<FaWallet />}
                                     bgGradient="linear(to-r, #081781, #061264)"
                                     _hover={{
@@ -447,7 +447,7 @@ function App() {
                                                 colorScheme={activeTab === "create" ? "purple" : "gray"}
                                                 variant={activeTab === "create" ? "solid" : "ghost"}
                                                 flex={1}
-                                                size="lg"
+                                                fontSize={{ base: "2xl", xl: "2xl" }}
                                                 borderRadius="lg"
                                                 leftIcon={<Icon as={FaFileContract} />}
                                                 bgGradient={activeTab === "create" ? "linear(to-r, #081781, #061264)" : undefined}
@@ -465,7 +465,7 @@ function App() {
                                                 colorScheme={activeTab === "myWills" ? "purple" : "gray"}
                                                 variant={activeTab === "myWills" ? "solid" : "ghost"}
                                                 flex={1}
-                                                size="lg"
+                                                fontSize={{ base: "2xl", xl: "2xl" }}
                                                 borderRadius="lg"
                                                 leftIcon={<Icon as={FaWallet} />}
                                                 bgGradient={activeTab === "myWills" ? "linear(to-r, #081781, #061264)" : undefined}

@@ -306,11 +306,11 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             <Box textAlign="center">
                 <HStack justify="center" mb={4}>
                     <Icon as={FaShieldAlt} boxSize={8} color="#081781" />
-                    <Heading size="lg" bgGradient="linear(to-r, #081781, #061264)" bgClip="text">
+                    <Heading size={{ base: "1xl", xl: "lg" }} bgGradient="linear(to-r, #081781, #061264)" bgClip="text">
                         Create Will
                     </Heading>
                 </HStack>
-                <Text color={textColor} fontSize="lg" maxW="600px" mx="auto">
+                <Text color={textColor} fontSize={{ base: "2xl", xl: "lg" }} maxW="600px" mx="auto">
                     Create a smart will for secure transfer of your crypto assets
                 </Text>
             </Box>
@@ -321,79 +321,65 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             <Box>
                 <HStack mb={6}>
                     <Icon as={FaUser} color="blue.500" />
-                    <Heading size="md">Heir Information</Heading>
+                    <Heading size={{ base: "2xl", xl: "md" }}>Heir Information</Heading>
                 </HStack>
 
                 <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
                     <FormControl>
-                        <FormLabel fontWeight="semibold" color={textColor}>
+                        <FormLabel fontWeight="semibold" color={textColor} fontSize={{ base: "2xl", xl: "md" }}>
                             Heir Full Name
                         </FormLabel>
                         <Input
-                            name="heirName"
                             value={form.heirName}
-                            onChange={handleChange}
-                            bg={inputBg}
-                            border="2px solid"
+                            onChange={(e) => setForm({ ...form, heirName: e.target.value })}
                             borderColor={borderColor}
-                            borderRadius="lg"
-                            _hover={{ borderColor: "#081781" }}
                             _focus={{
                                 borderColor: "#081781",
-                                boxShadow: "0 0 0 1px #081781",
-                                bg: cardBg
+                                boxShadow: "0 0 0 1px #081781"
                             }}
                             placeholder="John Smith"
                             size="lg"
+                            fontSize={{ base: "2xl", xl: "md" }}
                         />
                     </FormControl>
 
                     <FormControl>
-                        <FormLabel fontWeight="semibold" color={textColor}>
+                        <FormLabel fontWeight="semibold" color={textColor} fontSize={{ base: "2xl", xl: "md" }}>
                             Relationship
                         </FormLabel>
                         <Input
-                            name="heirRole"
                             value={form.heirRole}
-                            onChange={handleChange}
-                            bg={inputBg}
-                            border="2px solid"
+                            onChange={(e) => setForm({ ...form, heirRole: e.target.value })}
                             borderColor={borderColor}
-                            borderRadius="lg"
-                            _hover={{ borderColor: "#081781" }}
                             _focus={{
                                 borderColor: "#081781",
-                                boxShadow: "0 0 0 1px #081781",
-                                bg: cardBg
+                                boxShadow: "0 0 0 1px #081781"
                             }}
                             placeholder="Son, Daughter, Spouse"
                             size="lg"
+                            fontSize={{ base: "2xl", xl: "md" }}
                         />
                     </FormControl>
 
                     <FormControl gridColumn={{ md: "span 2" }}>
-                        <FormLabel fontWeight="semibold" color={textColor}>
+                        <FormLabel fontWeight="semibold" color={textColor} fontSize={{ base: "2xl", xl: "md" }}>
                             Heir Wallet Address
                         </FormLabel>
                         <Input
-                            name="heir"
                             value={form.heir}
                             onChange={handleChange}
-                            bg={inputBg}
-                            border="2px solid"
+                            name="heir"
                             borderColor={borderColor}
-                            borderRadius="lg"
-                            _hover={{ borderColor: "#081781" }}
                             _focus={{
                                 borderColor: "#081781",
-                                boxShadow: "0 0 0 1px #081781",
-                                bg: cardBg
+                                boxShadow: "0 0 0 1px #081781"
                             }}
                             placeholder="0x742d35Cc6634C0532925a3b8D4C9db96590c6C87"
                             fontFamily="monospace"
                             size="lg"
+                            fontSize={{ base: "xl", xl: "sm" }}
                         />
-                        <Text fontSize="sm" color={textColor} mt={2}>
+                        <Text fontSize={{ base: "xl", xl: "sm" }} color={textColor} mt={2}>
                             Ethereum address of the wallet where funds will be transferred
                         </Text>
                     </FormControl>
@@ -406,62 +392,52 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             <Box>
                 <HStack mb={6}>
                     <Icon as={FaEthereum} color="green.500" />
-                    <Heading size="md">Financial Parameters</Heading>
+                    <Heading size={{ base: "2xl", xl: "md" }}>Financial Parameters</Heading>
                 </HStack>
 
                 <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
                     <FormControl>
-                        <FormLabel fontWeight="semibold" color={textColor}>
+                        <FormLabel fontWeight="semibold" color={textColor} fontSize={{ base: "2xl", xl: "md" }}>
                             Regular Transfer Amount (ETH)
                         </FormLabel>
                         <Input
-                            name="transferAmount"
                             value={form.transferAmount}
-                            onChange={handleChange}
-                            bg={inputBg}
-                            border="2px solid"
+                            onChange={(e) => setForm({ ...form, transferAmount: e.target.value })}
                             borderColor={borderColor}
-                            borderRadius="lg"
-                            _hover={{ borderColor: "#081781" }}
                             _focus={{
                                 borderColor: "#081781",
-                                boxShadow: "0 0 0 1px #081781",
-                                bg: cardBg
+                                boxShadow: "0 0 0 1px #081781"
                             }}
                             placeholder="0.001"
                             type="number"
                             step="0.001"
                             size="lg"
+                            fontSize={{ base: "2xl", xl: "md" }}
                         />
-                        <Text fontSize="sm" color={textColor} mt={2}>
+                        <Text fontSize={{ base: "xl", xl: "sm" }} color={textColor} mt={2}>
                             Amount that will be transferred to heir regularly
                         </Text>
                     </FormControl>
 
                     <FormControl>
-                        <FormLabel fontWeight="semibold" color={textColor}>
+                        <FormLabel fontWeight="semibold" color={textColor} fontSize={{ base: "2xl", xl: "md" }}>
                             Total Limit (ETH)
                         </FormLabel>
                         <Input
-                            name="limit"
                             value={form.limit}
-                            onChange={handleChange}
-                            bg={inputBg}
-                            border="2px solid"
+                            onChange={(e) => setForm({ ...form, limit: e.target.value })}
                             borderColor={borderColor}
-                            borderRadius="lg"
-                            _hover={{ borderColor: "#081781" }}
                             _focus={{
                                 borderColor: "#081781",
-                                boxShadow: "0 0 0 1px #081781",
-                                bg: cardBg
+                                boxShadow: "0 0 0 1px #081781"
                             }}
                             placeholder="0.005"
                             type="number"
                             step="0.001"
                             size="lg"
+                            fontSize={{ base: "2xl", xl: "md" }}
                         />
-                        <Text fontSize="sm" color={textColor} mt={2}>
+                        <Text fontSize={{ base: "xl", xl: "sm" }} color={textColor} mt={2}>
                             Maximum amount that can be transferred
                         </Text>
                     </FormControl>
@@ -474,12 +450,12 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             <Box>
                 <HStack mb={6}>
                     <Icon as={FaClock} color="orange.500" />
-                    <Heading size="md">Time Parameters</Heading>
+                    <Heading size={{ base: "2xl", xl: "md" }}>Time Parameters</Heading>
                 </HStack>
 
                 <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
                     <FormControl>
-                        <FormLabel fontWeight="semibold" color={textColor}>
+                        <FormLabel fontWeight="semibold" color={textColor} fontSize={{ base: "2xl", xl: "md" }}>
                             Payment Frequency (seconds)
                         </FormLabel>
                         <NumberInput
@@ -489,16 +465,13 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                             size="lg"
                         >
                             <NumberInputField
-                                bg={inputBg}
-                                border="2px solid"
                                 borderColor={borderColor}
-                                borderRadius="lg"
-                                _hover={{ borderColor: "#081781" }}
                                 _focus={{
                                     borderColor: "#081781",
                                     boxShadow: "0 0 0 1px #081781",
                                     bg: cardBg
                                 }}
+                                fontSize={{ base: "2xl", xl: "md" }}
                             />
                             <NumberInputStepper>
                                 <NumberIncrementStepper />
@@ -506,17 +479,17 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                             </NumberInputStepper>
                         </NumberInput>
                         <HStack mt={2} spacing={2}>
-                            <Badge colorScheme="blue" variant="subtle">
+                            <Badge colorScheme="blue" variant="subtle" fontSize={{ base: "xl", xl: "sm" }}>
                                 Minimum: 60 sec
                             </Badge>
-                            <Text fontSize="sm" color={textColor}>
+                            <Text fontSize={{ base: "xl", xl: "sm" }} color={textColor}>
                                 ({Math.round(form.frequency / 60)} min)
                             </Text>
                         </HStack>
                     </FormControl>
 
                     <FormControl>
-                        <FormLabel fontWeight="semibold" color={textColor}>
+                        <FormLabel fontWeight="semibold" color={textColor} fontSize={{ base: "2xl", xl: "md" }}>
                             Waiting Period (seconds)
                         </FormLabel>
                         <NumberInput
@@ -526,16 +499,13 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                             size="lg"
                         >
                             <NumberInputField
-                                bg={inputBg}
-                                border="2px solid"
                                 borderColor={borderColor}
-                                borderRadius="lg"
-                                _hover={{ borderColor: "#081781" }}
                                 _focus={{
                                     borderColor: "#081781",
                                     boxShadow: "0 0 0 1px #081781",
                                     bg: cardBg
                                 }}
+                                fontSize={{ base: "2xl", xl: "md" }}
                             />
                             <NumberInputStepper>
                                 <NumberIncrementStepper />
@@ -543,10 +513,10 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                             </NumberInputStepper>
                         </NumberInput>
                         <HStack mt={2} spacing={2}>
-                            <Badge colorScheme="orange" variant="subtle">
+                            <Badge colorScheme="orange" variant="subtle" fontSize={{ base: "xl", xl: "sm" }}>
                                 Minimum: 120 sec
                             </Badge>
-                            <Text fontSize="sm" color={textColor}>
+                            <Text fontSize={{ base: "xl", xl: "sm" }} color={textColor}>
                                 ({Math.round(form.waitingPeriod / 60)} min)
                             </Text>
                         </HStack>
@@ -554,14 +524,14 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                 </Grid>
 
                 <Box mt={4} p={4} bg={useColorModeValue('blue.50', 'blue.900')} borderRadius="lg">
-                    <Text fontSize="sm" color={textColor}>
+                    <Text fontSize={{ base: "xl", xl: "sm" }} color={textColor}>
                         <strong>Waiting Period</strong> - time after which the heir will be able to receive funds
                         if you do not show activity on the network.
                     </Text>
                 </Box>
             </Box>
 
-            {/* Create button */}
+            {/* Submit button */}
             <Box pt={4}>
                 <Button
                     colorScheme="purple"
@@ -585,7 +555,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                     size="xl"
                     width="100%"
                     py={6}
-                    fontSize="lg"
+                    fontSize={{ base: "2xl", xl: "lg" }}
                     fontWeight="bold"
                     bgGradient="linear(to-r, #081781, #061264)"
                     _hover={{

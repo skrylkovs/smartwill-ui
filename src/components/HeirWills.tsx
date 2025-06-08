@@ -479,7 +479,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
             <Flex justifyContent="space-between" alignItems="center">
                 <HStack spacing={3}>
                     <Icon as={FaGift} boxSize={6} color="green.500" />
-                    <Heading size="lg" bgGradient="linear(to-r, green.500, green.600)" bgClip="text">
+                    <Heading size={{ base: "1xl", xl: "lg" }} bgGradient="linear(to-r, green.500, green.600)" bgClip="text">
                         My inheritance
                     </Heading>
                 </HStack>
@@ -487,18 +487,14 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                     size="md"
                     onClick={refreshWills}
                     leftIcon={<Icon as={RepeatIcon} />}
-                    isLoading={loading}
                     colorScheme="green"
                     variant="outline"
-                    borderRadius="lg"
                     _hover={{
-                        bg: "transparent",
-                        transform: "translateY(-1px)",
-                        bgGradient: "linear(to-r, green.500, green.600)",
-                        color: "white",
-                        borderColor: "transparent"
+                        bg: "green.50",
+                        transform: "translateY(-1px)"
                     }}
                     transition="all 0.2s"
+                    fontSize={{ base: "2xl", xl: "md" }}
                 >
                     Refresh
                 </Button>
@@ -509,15 +505,15 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                     <VStack spacing={6}>
                         <Spinner size="xl" color="green.500" thickness="4px" speed="0.8s" />
                         <VStack spacing={2}>
-                            <Text fontSize="lg" color={textColor} fontWeight="medium">
+                            <Text fontSize={{ base: "2xl", xl: "lg" }} color={textColor} fontWeight="medium">
                                 Searching for wills...
                             </Text>
                             {loadingProgress.total > 0 && (
-                                <Text fontSize="sm" color="gray.500">
+                                <Text fontSize={{ base: "2xl", xl: "sm" }} color="gray.500">
                                     Checked {loadingProgress.current} of {loadingProgress.total} wills
                                 </Text>
                             )}
-                            <Text fontSize="xs" color="gray.400">
+                            <Text fontSize={{ base: "xl", xl: "xs" }} color="gray.400">
                                 Requests completed: {requestCountRef.current}
                             </Text>
                         </VStack>
@@ -528,10 +524,10 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                     <VStack spacing={6}>
                         <Icon as={FaGift} boxSize={16} color="gray.300" />
                         <VStack spacing={2}>
-                            <Heading size="md" color={textColor}>
+                            <Heading size={{ base: "2xl", xl: "md" }} color={textColor}>
                                 You are not an heir
                             </Heading>
-                            <Text fontSize="lg" color={textColor}>
+                            <Text fontSize={{ base: "2xl", xl: "lg" }} color={textColor}>
                                 At the moment, there are no available wills for you
                             </Text>
                         </VStack>
@@ -544,9 +540,9 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                         <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
                             <CardBody>
                                 <Stat>
-                                    <StatLabel color={textColor}>Wills</StatLabel>
-                                    <StatNumber color="green.500">{statistics.totalWills}</StatNumber>
-                                    <StatHelpText>Where you are an heir</StatHelpText>
+                                    <StatLabel color={textColor} fontSize={{ base: "2xl", xl: "md" }}>Wills</StatLabel>
+                                    <StatNumber color="green.500" fontSize={{ base: "6xl", xl: "3xl" }}>{statistics.totalWills}</StatNumber>
+                                    <StatHelpText fontSize={{ base: "xl", xl: "sm" }}>Where you are an heir</StatHelpText>
                                 </Stat>
                             </CardBody>
                         </Card>
@@ -554,11 +550,11 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                         <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
                             <CardBody>
                                 <Stat>
-                                    <StatLabel color={textColor}>Available to receive</StatLabel>
-                                    <StatNumber color="blue.500">
+                                    <StatLabel color={textColor} fontSize={{ base: "2xl", xl: "md" }}>Available to receive</StatLabel>
+                                    <StatNumber color="blue.500" fontSize={{ base: "6xl", xl: "3xl" }}>
                                         {statistics.totalBalance} ETH
                                     </StatNumber>
-                                    <StatHelpText>Total amount</StatHelpText>
+                                    <StatHelpText fontSize={{ base: "xl", xl: "sm" }}>Total amount</StatHelpText>
                                 </Stat>
                             </CardBody>
                         </Card>
@@ -566,11 +562,11 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                         <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
                             <CardBody>
                                 <Stat>
-                                    <StatLabel color={textColor}>Ready to receive</StatLabel>
-                                    <StatNumber color="orange.500">
+                                    <StatLabel color={textColor} fontSize={{ base: "2xl", xl: "md" }}>Ready to receive</StatLabel>
+                                    <StatNumber color="orange.500" fontSize={{ base: "6xl", xl: "3xl" }}>
                                         {statistics.claimableWills}
                                     </StatNumber>
-                                    <StatHelpText>Wills</StatHelpText>
+                                    <StatHelpText fontSize={{ base: "xl", xl: "sm" }}>Wills</StatHelpText>
                                 </Stat>
                             </CardBody>
                         </Card>
@@ -584,40 +580,40 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                 bg={cardBg}
                                 borderRadius="xl"
                                 boxShadow="lg"
-                                border="1px solid"
-                                borderColor={will.canClaim ? "green.200" : borderColor}
-                                transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+                                border="2px solid"
+                                borderColor={will.canClaim ? "green.200" : "gray.200"}
                                 _hover={{
                                     transform: "translateY(-2px)",
                                     boxShadow: "xl",
-                                    borderColor: will.canClaim ? "green.400" : "#081781"
+                                    borderColor: will.canClaim ? "green.300" : "gray.300"
                                 }}
+                                transition="all 0.2s"
                             >
                                 <CardHeader pb={2}>
                                     <HStack justify="space-between">
                                         <HStack spacing={3}>
                                             <Icon as={FaUser} color="blue.500" boxSize={5} />
                                             <VStack align="start" spacing={0}>
-                                                <Heading size="md" color="#081781">
+                                                <Heading size={{ base: "2xl", xl: "md" }} color="#081781">
                                                     {will.heirName} ({will.heirRole})
                                                 </Heading>
-                                                <Text fontSize="sm" color={textColor}>
+                                                <Text fontSize={{ base: "xl", xl: "sm" }} color={textColor}>
                                                     From: {`${will.ownerAddress.slice(0, 6)}...${will.ownerAddress.slice(-4)}`}
                                                 </Text>
                                             </VStack>
                                         </HStack>
-                                        <VStack spacing={2} align="end">
+                                        <VStack align="end" spacing={1}>
                                             <Badge
                                                 colorScheme={will.canClaim ? "green" : "orange"}
                                                 variant="outline"
-                                                fontSize="sm"
+                                                fontSize={{ base: "xl", xl: "sm" }}
                                                 px={3}
                                                 py={1}
                                             >
                                                 Will #{index + 1}
                                             </Badge>
                                             {will.canClaim && (
-                                                <Badge colorScheme="green" variant="solid" fontSize="xs">
+                                                <Badge colorScheme="green" variant="solid" fontSize={{ base: "lg", xl: "xs" }}>
                                                     Ready to receive
                                                 </Badge>
                                             )}
@@ -631,15 +627,15 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                         <VStack align="start" spacing={3}>
                                             <HStack>
                                                 <Icon as={FaEthereum} color="gray.500" />
-                                                <Text fontSize="sm" fontWeight="semibold" color={textColor}>
+                                                <Text fontSize={{ base: "2xl", xl: "sm" }} fontWeight="semibold" color={textColor}>
                                                     Funds
                                                 </Text>
                                             </HStack>
                                             <VStack align="start" spacing={1}>
-                                                <Text fontSize="sm">
+                                                <Text fontSize={{ base: "xl", xl: "sm" }}>
                                                     <strong>Available:</strong> {will.balance} ETH
                                                 </Text>
-                                                <Text fontSize="sm">
+                                                <Text fontSize={{ base: "xl", xl: "sm" }}>
                                                     <strong>Per transfer:</strong> {will.transferAmount} ETH
                                                 </Text>
                                             </VStack>
@@ -649,30 +645,30 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                         <VStack align="start" spacing={3}>
                                             <HStack>
                                                 <Icon as={FaClock} color="gray.500" />
-                                                <Text fontSize="sm" fontWeight="semibold" color={textColor}>
+                                                <Text fontSize={{ base: "2xl", xl: "sm" }} fontWeight="semibold" color={textColor}>
                                                     Time settings
                                                 </Text>
                                             </HStack>
                                             <VStack align="start" spacing={1}>
-                                                <Text fontSize="sm">
+                                                <Text fontSize={{ base: "xl", xl: "sm" }}>
                                                     <strong>Transfer frequency:</strong>{" "}
-                                                    <Badge colorScheme="orange" variant="subtle" borderRadius="md">
+                                                    <Badge colorScheme="orange" variant="subtle" borderRadius="md" fontSize={{ base: "lg", xl: "xs" }}>
                                                         {formatTime(Number(will.transferFrequency))}
                                                     </Badge>
                                                 </Text>
-                                                <Text fontSize="sm">
+                                                <Text fontSize={{ base: "xl", xl: "sm" }}>
                                                     <strong>Waiting period:</strong>{" "}
-                                                    <Badge colorScheme="purple" variant="subtle" borderRadius="md">
+                                                    <Badge colorScheme="purple" variant="subtle" borderRadius="md" fontSize={{ base: "lg", xl: "xs" }}>
                                                         {formatTime(Number(will.waitingPeriod))}
                                                     </Badge>
                                                 </Text>
-                                                <Text fontSize="sm">
+                                                <Text fontSize={{ base: "xl", xl: "sm" }}>
                                                     <strong>Last activity:</strong>{" "}
-                                                    <Badge colorScheme="blue" variant="subtle" borderRadius="md">
+                                                    <Badge colorScheme="blue" variant="subtle" borderRadius="md" fontSize={{ base: "lg", xl: "xs" }}>
                                                         {new Date(Number(will.ownerLastActivity) * 1000).toLocaleString()}
                                                     </Badge>
                                                 </Text>
-                                                <Text fontSize="xs" color={textColor}>
+                                                <Text fontSize={{ base: "lg", xl: "xs" }} color={textColor}>
                                                     Next opportunity: {formatNextClaimTime(will.nextClaimTime, will.ownerLastActivity, will.waitingPeriod)}
                                                 </Text>
                                             </VStack>
@@ -682,13 +678,13 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                         <VStack align="start" spacing={3}>
                                             <HStack>
                                                 <Icon as={FaCoins} color="gray.500" />
-                                                <Text fontSize="sm" fontWeight="semibold" color={textColor}>
+                                                <Text fontSize={{ base: "2xl", xl: "sm" }} fontWeight="semibold" color={textColor}>
                                                     Actions
                                                 </Text>
                                             </HStack>
                                             <Button
                                                 onClick={() => claimInheritance(will.address)}
-                                                isDisabled={!will.canClaim || parseFloat(will.balance) === 0}
+                                                isDisabled={!will.canClaim}
                                                 isLoading={claimingWill === will.address}
                                                 loadingText="Receiving..."
                                                 colorScheme="green"
@@ -698,6 +694,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                                     transform: will.canClaim ? "translateY(-1px)" : "none",
                                                     boxShadow: will.canClaim ? "md" : "none"
                                                 }}
+                                                fontSize={{ base: "xl", xl: "sm" }}
                                             >
                                                 Receive funds
                                             </Button>
@@ -707,7 +704,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                                     <Divider my={4} />
 
                                     <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="lg">
-                                        <Text fontSize="xs" color={textColor} fontFamily="monospace">
+                                        <Text fontSize={{ base: "lg", xl: "xs" }} color={textColor} fontFamily="monospace">
                                             <strong>Contract address:</strong> {will.address}
                                         </Text>
                                     </Box>
@@ -719,7 +716,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                     {/* Информационное сообщение */}
                     <Alert status="info" borderRadius="xl" variant="subtle">
                         <AlertIcon />
-                        <AlertDescription>
+                        <AlertDescription fontSize={{ base: "xl", xl: "sm" }}>
                             You can receive funds only if the will owner did not show activity during the established period of time.
                         </AlertDescription>
                     </Alert>
