@@ -458,7 +458,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                             <CardBody>
                                 <Stat>
                                     <StatLabel color={textColor} fontSize={{ base: "2xl", xl: "md" }}>Total Wills</StatLabel>
-                                    <StatNumber color="#081781" fontSize={{ base: "6xl", xl: "3xl" }}>{wills.length}</StatNumber>
+                                    <StatNumber color="#081781" fontSize={{ base: "4xl", xl: "3xl" }}>{wills.length}</StatNumber>
                                     <StatHelpText fontSize={{ base: "xl", xl: "sm" }}>Active contracts</StatHelpText>
                                 </Stat>
                             </CardBody>
@@ -548,7 +548,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                                     Funds
                                                 </Text>
                                             </HStack>
-                                            <VStack align="start" spacing={1}>
+                                            <VStack align="start" spacing={3}>
                                                 <Text fontSize={{ base: "xl", xl: "1xl" }}>
                                                     <strong>Transfer:</strong> {will.transferAmount} ETH
                                                 </Text>
@@ -566,7 +566,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                                     Time Settings
                                                 </Text>
                                             </HStack>
-                                            <VStack align="start" spacing={1}>
+                                            <VStack align="start" spacing={3}>
                                                 <Text fontSize={{ base: "xl", xl: "1xl" }}>
                                                     <strong>Transfer Frequency:</strong>{" "}
                                                     <Badge colorScheme="orange" variant="subtle" borderRadius="md" fontSize={{ base: "lg", xl: "xs" }}>

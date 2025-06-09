@@ -430,6 +430,8 @@ function App() {
                     ) : (
                         <>
                             {/* Navigation buttons */}
+                            {/* Testator mode - show "Create Will" and "My Wills" */}
+                            {appMode === "testator" && (
                             <Box
                                 bg={cardBg}
                                 borderRadius="xl"
@@ -439,8 +441,7 @@ function App() {
                                 maxW="1200px"
                             >
                                 <HStack spacing={2}>
-                                    {/* Testator mode - show "Create Will" and "My Wills" */}
-                                    {appMode === "testator" && (
+
                                         <>
                                             <Button
                                                 onClick={() => setActiveTab("create")}
@@ -479,30 +480,10 @@ function App() {
                                                 My Wills
                                             </Button>
                                         </>
-                                    )}
 
-                                    {/* Heir mode - show only "My Inheritance" */}
-                                    {appMode === "heir" && (
-                                        <Button
-                                            onClick={() => setActiveTab("heirWills")}
-                                            colorScheme="green"
-                                            variant="solid"
-                                            flex={1}
-                                            size="lg"
-                                            borderRadius="lg"
-                                            leftIcon={<Icon as={FaGift} />}
-                                            bgGradient="linear(to-r, green.500, green.600)"
-                                            _hover={{
-                                                bgGradient: "linear(to-r, green.600, green.700)"
-                                            }}
-                                            transition="all 0.2s"
-                                        >
-                                            My Inheritance
-                                        </Button>
-                                    )}
                                 </HStack>
                             </Box>
-
+                                        )}
                             {/* Main content */}
                             <Box
                                 p={8}

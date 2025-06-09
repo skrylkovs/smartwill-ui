@@ -91,7 +91,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                 throw new Error("Please switch to Arbitrum Sepolia network in your wallet");
             }
 
-            // Валидация входных данных
+            // Input data validation
             if (!form.heir || !ethers.isAddress(form.heir)) {
                 throw new Error("Please enter a valid heir wallet address");
             }
@@ -114,7 +114,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
 
             setLoading(true);
 
-            // Проверка баланса пользователя
+            // Check user balance
             const userBalance = await provider.getBalance(await signer.getAddress());
             const limitWei = ethers.parseEther(form.limit);
 
@@ -140,7 +140,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                 throw new Error("Limit must be greater than or equal to transfer amount");
             }
 
-            // Явно проверяем, что контракт существует
+            // Explicitly check that contract exists
             const factoryCode = await provider.getCode(factoryAddress);
             if (factoryCode === "0x") {
                 throw new Error("Factory contract not found at the specified address");
@@ -149,7 +149,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             console.log("✅ Factory contract verified");
 
             // Add gas limit to solve estimateGas problem
-            const gasLimit = ethers.toBigInt(1500000); // Увеличенный лимит газа
+            const gasLimit = ethers.toBigInt(1500000); // Increased gas limit
 
             // Log parameters for debugging
             console.log("🔧 Parameters for createSmartWill:");
@@ -163,7 +163,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             console.log("- value:", ethers.formatEther(limitWei), "ETH");
             console.log("- gasLimit:", gasLimit.toString());
 
-            // Попытка оценки газа
+            // Gas estimation attempt
             try {
                 const estimatedGas = await factory.createSmartWill.estimateGas(
                     form.heir,
@@ -260,7 +260,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
 
             let errorMessage = err.message;
 
-            // Обработка специфических ошибок
+            // Handle specific errors
             if (err.message?.includes("user rejected")) {
                 errorMessage = "Transaction was rejected by user";
             } else if (err.message?.includes("insufficient funds")) {
@@ -282,7 +282,6 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
 
     const cardBg = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.600', 'gray.300');
-    const inputBg = useColorModeValue('gray.50', 'gray.700');
     const borderColor = useColorModeValue('gray.200', 'gray.600');
 
     return (
@@ -321,7 +320,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             <Box>
                 <HStack mb={6}>
                     <Icon as={FaUser} color="blue.500" />
-                    <Heading size={{ base: "2xl", xl: "md" }}>Heir Information</Heading>
+                    <Heading fontSize={{ base: "3xl", xl: "2xl" }}>Heir Information</Heading>
                 </HStack>
 
                 <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
@@ -392,7 +391,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             <Box>
                 <HStack mb={6}>
                     <Icon as={FaEthereum} color="green.500" />
-                    <Heading size={{ base: "2xl", xl: "md" }}>Financial Parameters</Heading>
+                    <Heading fontSize={{ base: "3xl", xl: "2xl" }}>Financial Parameters</Heading>
                 </HStack>
 
                 <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
@@ -450,7 +449,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             <Box>
                 <HStack mb={6}>
                     <Icon as={FaClock} color="orange.500" />
-                    <Heading size={{ base: "2xl", xl: "md" }}>Time Parameters</Heading>
+                    <Heading fontSize={{ base: "3xl", xl: "2xl" }}>Time Parameters</Heading>
                 </HStack>
 
                 <Grid templateColumns={{ base: "1fr", md: "1fr 1fr" }} gap={6}>
