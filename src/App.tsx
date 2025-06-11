@@ -20,7 +20,7 @@ import {
     FormControl,
     FormLabel
 } from "@chakra-ui/react";
-import { FaWallet, FaFileContract, FaShieldAlt, FaGift, FaUserTie, FaHeart } from "react-icons/fa";
+import { FaWallet, FaFileContract, FaShieldAlt } from "react-icons/fa";
 import CreateWillForm from "./components/CreateWillForm";
 import MyWills from "./components/MyWills";
 import HeirWills from "./components/HeirWills";
@@ -30,11 +30,10 @@ const CONFIG = {
     // Arbiscan API key - replace with your real key
     ARBISCAN_API_KEY: "EER1P87Y4I6R4JT9K3KYRWTVWET72VGH5V",
     // New factory address with security fixes and fallback functions
-    FACTORY_ADDRESS: "0xb83Fc3E89cF00E2697Cc6ecFe1cC989C7441CBd9"
+    FACTORY_ADDRESS: "0x21355f23269449966080503B26ba6cf086906074"
 };
 
 // Application mode types
-type AppMode = "testator" | "heir";
 
 function App() {
     const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
@@ -270,7 +269,7 @@ function App() {
                                 <FormControl display="flex" alignItems="center" justifyContent="center">
                                     <HStack spacing={3}>
                                         <HStack>
-                                            <Icon as={FaUserTie} color={appMode === "testator" ? "white" : "whiteAlpha.600"} />
+                                            <Icon as={FaShieldAlt} color={appMode === "testator" ? "white" : "whiteAlpha.600"} />
                                             <FormLabel
                                                 htmlFor="mode-switch"
                                                 mb={0}
@@ -298,7 +297,6 @@ function App() {
                                             >
                                                 Heir
                                             </FormLabel>
-                                            <Icon as={FaHeart} color={appMode === "heir" ? "white" : "whiteAlpha.600"} />
                                         </HStack>
                                     </HStack>
                                 </FormControl>

@@ -31,7 +31,6 @@ import { RepeatIcon } from "@chakra-ui/icons";
 import { FaWallet, FaUser, FaEthereum, FaClock, FaHeartbeat, FaFileContract } from "react-icons/fa";
 import SmartWillAbi from "../contracts/SmartWill.json";
 import factoryAbi from "../contracts/SmartWillFactory.json";
-import DiagnosticInfo from "./DiagnosticInfo";
 
 interface MyWillsProps {
     signer: ethers.Signer;
@@ -77,7 +76,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     };
 
     // Get will information
-    const fetchWillInfo = async (willAddress: string, retryCount = 3, delayMs = 1000) => {
+    const fetchWillInfo = async (willAddress: string, retryCount = 3, delayMs = 1000): Promise<WillInfo | null> => {
         try {
             const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
 
@@ -118,18 +117,8 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 return fetchWillInfo(willAddress, retryCount - 1, delayMs * 1.5);
             }
 
-            // Return basic information when retries are exhausted
-            return {
-                address: willAddress,
-                balance: "Loading...",
-                heir: "Loading...",
-                heirName: "Loading...",
-                heirRole: "Loading...",
-                transferAmount: "Loading...",
-                transferFrequency: "Loading...",
-                waitingPeriod: "Loading...",
-                limit: "Loading..."
-            };
+            // Return null if all retries exhausted
+            return null;
         }
     };
 
@@ -286,67 +275,94 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             console.log("👤 User address:", userAddress);
             console.log("🏭 Factory address:", factoryAddress);
 
-            // Get only current user's wills (safely)
-            let willsList = [];
+            // Try to get current user's wills using different methods
+            let willsList: string[] = [];
+
+            // Method 1: Try getMyWills() if available
             try {
-                // Use safe getMyWills() method
                 willsList = await factory.getMyWills();
-                console.log("✅ Found current user's wills:", willsList.length);
-                console.log("📄 Will addresses:", willsList);
+                console.log("✅ Found current user's wills via getMyWills():", willsList.length);
             } catch (error) {
-                console.error("❌ Error calling getMyWills:", error);
-                // If new method is unavailable, return empty array
-                willsList = [];
-            }
+                console.log("⚠️ getMyWills() not available, trying alternative methods:", error);
 
-            // Additional diagnostics: check total number of wills
-            try {
-                const allWills = await factory.getDeployedWills();
-                console.log("📊 Total wills in factory:", allWills.length);
-                console.log("🔗 All will addresses:", allWills);
-
-                // Check mapping for current user
+                // Method 2: Try to get all wills and filter by owner
                 try {
-                    const userWillsFromMapping = await factory.ownerToWills(userAddress, 0);
-                    console.log("🗂️ First will from mapping:", userWillsFromMapping);
-                } catch (mappingError) {
-                    console.log("📝 Mapping empty for user (normal if no wills exist)");
+                    const allWills = await factory.getDeployedWills();
+                    console.log("📊 Total wills in factory:", allWills.length);
+
+                    // Check each will to see if current user is the owner
+                    const userWills: string[] = [];
+                    for (const willAddress of allWills) {
+                        try {
+                            const willContract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
+                            const owner = await willContract.owner();
+                            if (owner.toLowerCase() === userAddress.toLowerCase()) {
+                                userWills.push(willAddress);
+                            }
+                        } catch (willError) {
+                            console.warn(`Failed to check will ${willAddress}:`, willError);
+                        }
+                    }
+                    willsList = userWills;
+                    console.log("✅ Found user's wills by filtering:", willsList.length);
+                } catch (allWillsError) {
+                    console.error("❌ Failed to get all wills:", allWillsError);
+
+                    // Method 3: Try mapping directly (if exists)
+                    try {
+                        const userWillsFromMapping: string[] = [];
+                        let index = 0;
+                        while (true) {
+                            try {
+                                const willAddress = await factory.ownerToWills(userAddress, index);
+                                if (willAddress === ethers.ZeroAddress) break;
+                                userWillsFromMapping.push(willAddress);
+                                index++;
+                            } catch {
+                                break;
+                            }
+                        }
+                        willsList = userWillsFromMapping;
+                        console.log("✅ Found user's wills via mapping:", willsList.length);
+                    } catch (mappingError) {
+                        console.error("❌ Failed to access mapping:", mappingError);
+                        willsList = [];
+                    }
                 }
-            } catch (debugError) {
-                console.error("⚠️ Error getting debug information:", debugError);
             }
 
-            // If wills list is empty, finish work
+            // If no wills found, finish
             if (willsList.length === 0) {
-                console.log("❌ No wills found for current user");
+                console.log("ℹ️ No wills found for current user");
                 setWills([]);
+                await fetchLastPing();
                 return;
             }
 
-            // Add small delay before requesting will information,
-            // to give blockchain time to process transactions
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log("📄 Will addresses to process:", willsList);
 
             // Get information about each will
-            const willsInfo = await Promise.all(
-                willsList.map((address: string) => fetchWillInfo(address))
-            );
+            const willsInfoPromises = willsList.map(address => fetchWillInfo(address));
+            const willsInfoResults = await Promise.all(willsInfoPromises);
 
-            // Now display only current user's wills
-            const validWills = willsInfo.filter(Boolean) as WillInfo[];
-            console.log("✅ Valid user wills:", validWills.length);
+            // Filter out null results
+            const validWills = willsInfoResults.filter((will): will is WillInfo => will !== null);
+            console.log("✅ Successfully loaded wills:", validWills.length);
 
             setWills(validWills);
 
             // Get last ping information
             await fetchLastPing();
 
-            // Additional update after a second for reliability
-            setTimeout(async () => {
-                await fetchLastPing();
-            }, 1000);
         } catch (error) {
             console.error("💥 General error loading wills:", error);
+            toast({
+                title: "Loading Error",
+                description: "Failed to load wills data. Check console for details.",
+                status: "error",
+                duration: 5000,
+                isClosable: true
+            });
         } finally {
             setLoading(false);
         }
@@ -371,10 +387,10 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
 
     // Loading hook on mount
     useEffect(() => {
-        if (signer) {
+        if (signer && factoryAddress) {
             loadWills();
         }
-    }, [signer]);
+    }, [signer, factoryAddress]);
 
     // Method to force data refresh
     const refreshWills = () => {
@@ -392,9 +408,6 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
 
     return (
         <VStack spacing={8} align="stretch" w="100%">
-            {/* Diagnostic information */}
-            <DiagnosticInfo signer={signer} factoryAddress={factoryAddress} />
-
             {/* Header with refresh button */}
             <Flex justifyContent="space-between" alignItems="center">
                 <HStack spacing={3}>
@@ -467,11 +480,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                         <Card bg={cardBg} borderRadius="xl" boxShadow="lg">
                             <CardBody>
                                 <Stat>
-                                    <StatLabel color={textColor} fontSize={{ base: "2xl", xl: "2xl" }}>Total Balance</StatLabel>
+                                    <StatLabel color={textColor} fontSize={{ base: "2xl", xl: "md" }}>Total Balance</StatLabel>
                                     <StatNumber color="green.500" fontSize={{ base: "4xl", xl: "3xl" }}>
                                         {wills.reduce((sum, will) => sum + parseFloat(will.balance || '0'), 0).toFixed(4)} ETH
                                     </StatNumber>
-                                    <StatHelpText fontSize={{ base: "xl", xl: "xl" }}>In all wills</StatHelpText>
+                                    <StatHelpText fontSize={{ base: "xl", xl: "sm" }}>In all wills</StatHelpText>
                                 </Stat>
                             </CardBody>
                         </Card>
@@ -531,11 +544,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                         <VStack align="start" spacing={3}>
                                             <HStack>
                                                 <Icon as={FaWallet} color="gray.500" />
-                                                <Text fontSize={{ base: "xl", xl: "1xl" }} fontWeight="semibold" color={textColor}>
+                                                <Text fontSize={{ base: "2xl", xl: "sm" }} fontWeight="semibold" color={textColor}>
                                                     Heir Wallet
                                                 </Text>
                                             </HStack>
-                                            <Text fontSize={{ base: "xl", xl: "1xl" }} fontFamily="monospace" color="blue.500">
+                                            <Text fontSize={{ base: "xl", xl: "sm" }} fontFamily="monospace" color="blue.500">
                                                 {`${will.heir.slice(0, 6)}...${will.heir.slice(-4)}`}
                                             </Text>
                                         </VStack>
@@ -544,15 +557,15 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                         <VStack align="start" spacing={3}>
                                             <HStack>
                                                 <Icon as={FaEthereum} color="gray.500" />
-                                                <Text fontSize={{ base: "2xl", xl: "2xl" }} fontWeight="semibold" color={textColor}>
+                                                <Text fontSize={{ base: "2xl", xl: "sm" }} fontWeight="semibold" color={textColor}>
                                                     Funds
                                                 </Text>
                                             </HStack>
                                             <VStack align="start" spacing={3}>
-                                                <Text fontSize={{ base: "xl", xl: "1xl" }}>
+                                                <Text fontSize={{ base: "xl", xl: "sm" }}>
                                                     <strong>Transfer:</strong> {will.transferAmount} ETH
                                                 </Text>
-                                                <Text fontSize={{ base: "xl", xl: "1xl" }}>
+                                                <Text fontSize={{ base: "xl", xl: "sm" }}>
                                                     <strong>Balance:</strong> {will.balance} ETH
                                                 </Text>
                                             </VStack>
@@ -562,18 +575,18 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                         <VStack align="start" spacing={3}>
                                             <HStack>
                                                 <Icon as={FaClock} color="gray.500" />
-                                                <Text fontSize={{ base: "2xl", xl: "2xl" }} fontWeight="semibold" color={textColor}>
+                                                <Text fontSize={{ base: "2xl", xl: "sm" }} fontWeight="semibold" color={textColor}>
                                                     Time Settings
                                                 </Text>
                                             </HStack>
                                             <VStack align="start" spacing={3}>
-                                                <Text fontSize={{ base: "xl", xl: "1xl" }}>
+                                                <Text fontSize={{ base: "xl", xl: "sm" }}>
                                                     <strong>Transfer Frequency:</strong>{" "}
                                                     <Badge colorScheme="orange" variant="subtle" borderRadius="md" fontSize={{ base: "lg", xl: "xs" }}>
                                                         {formatTime(Number(will.transferFrequency))}
                                                     </Badge>
                                                 </Text>
-                                                <Text fontSize={{ base: "xl", xl: "1xl" }}>
+                                                <Text fontSize={{ base: "xl", xl: "sm" }}>
                                                     <strong>Waiting Period:</strong>{" "}
                                                     <Badge colorScheme="purple" variant="subtle" borderRadius="md" fontSize={{ base: "lg", xl: "xs" }}>
                                                         {formatTime(Number(will.waitingPeriod))}
@@ -601,11 +614,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                         borderRadius="xl"
                         boxShadow="lg"
                     >
-                        <CardBody>
-                            <VStack spacing={6}>
+                        <CardBody p={{ base: 4, md: 6 }}>
+                            <VStack spacing={{ base: 4, md: 6 }}>
                                 <VStack spacing={2} textAlign="center">
                                     <HStack>
-                                        <Icon as={FaHeartbeat} color="red.500" boxSize={6} />
+                                        <Icon as={FaHeartbeat} color="red.500" boxSize={{ base: 4, md: 6 }} />
                                         <Heading size={{ base: "2xl", xl: "md" }} color="#081781">
                                             Life Confirmation
                                         </Heading>
@@ -617,34 +630,29 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
 
                                 <Button
                                     onClick={handlePingAll}
-                                    colorScheme="blue"
-                                    size="lg"
                                     isLoading={pingLoading}
-                                    loadingText="Sending confirmation..."
-                                    width={{ base: "100%", md: "auto" }}
-                                    px={12}
-                                    py={6}
-                                    fontSize={{ base: "2xl", xl: "lg" }}
-                                    fontWeight="bold"
+                                    loadingText="Sending..."
+                                    colorScheme="red"
+                                    size="lg"
                                     leftIcon={<Icon as={FaHeartbeat} />}
-                                    bgGradient="linear(to-r, #081781, #061264)"
-                                    color="white"
                                     _hover={{
-                                        bgGradient: "linear(to-r, #061264, #040d47)",
-                                        transform: "translateY(-2px)",
-                                        boxShadow: "xl"
+                                        transform: "translateY(-1px)",
+                                        boxShadow: "lg"
                                     }}
-                                    _active={{ transform: "translateY(0)" }}
-                                    transition="all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
-                                    borderRadius="xl"
+                                    fontSize={{ base: "2xl", xl: "md" }}
                                 >
-                                    Confirm Life Activity
+                                    Confirm I'm Alive
                                 </Button>
 
-                                <Alert status="info" borderRadius="lg" variant="subtle">
-                                    <AlertIcon />
+                                <Alert
+                                    status="info"
+                                    borderRadius="lg"
+                                    variant="subtle"
+                                    p={{ base: 3, md: 4 }}
+                                >
+                                    <AlertIcon boxSize={{ base: 4, md: 5 }} />
                                     <AlertDescription fontSize={{ base: "xl", xl: "sm" }}>
-                                        Last confirmation: <strong>{lastPing}</strong>
+                                        Last confirmation: {lastPing}
                                     </AlertDescription>
                                 </Alert>
                             </VStack>
