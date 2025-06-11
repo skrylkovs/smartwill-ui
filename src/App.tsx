@@ -18,7 +18,8 @@ import {
     Icon,
     Switch,
     FormControl,
-    FormLabel
+    FormLabel,
+    Image
 } from "@chakra-ui/react";
 import { FaWallet, FaFileContract, FaShieldAlt } from "react-icons/fa";
 import CreateWillForm from "./components/CreateWillForm";
@@ -30,10 +31,11 @@ const CONFIG = {
     // Arbiscan API key - replace with your real key
     ARBISCAN_API_KEY: "EER1P87Y4I6R4JT9K3KYRWTVWET72VGH5V",
     // New factory address with security fixes and fallback functions
-    FACTORY_ADDRESS: "0x21355f23269449966080503B26ba6cf086906074"
+    FACTORY_ADDRESS: "0x8B2510CB35B72E2207d4818dc98bB9CC86c47E11"
 };
 
 // Application mode types
+type AppMode = "testator" | "heir";
 
 function App() {
     const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
@@ -216,7 +218,7 @@ function App() {
             <Box
                 bgGradient={bgGradient}
                 py={6}
-                px={6}
+                px={0}
                 boxShadow="xl"
                 position="relative"
                 overflow="hidden"
@@ -245,22 +247,13 @@ function App() {
 
                 <Container maxW="container.xl" position="relative" zIndex={1}>
                     <Flex justifyContent="space-between" alignItems="center">
-                        <HStack spacing={4}>
-                            <Icon as={FaShieldAlt} boxSize={8} color="white" />
-                            <VStack align="start" spacing={0}>
-                                <Heading fontSize={{ base: "3xl", xl: "3xl" }} color="white" fontWeight="bold">
-                                    SmartWill
-                                </Heading>
-                                <Text fontSize={{ base: "xl", xl: "sm" }} color="whiteAlpha.800">
-                                    {account ?
-                                        (appMode === "testator" ?
-                                            "Create and manage wills" :
-                                            "Check available inheritance"
-                                        ) :
-                                        "Digital inheritance on blockchain"
-                                    }
-                                </Text>
-                            </VStack>
+                        <HStack spacing={1}>
+                            <Image
+                                src="/logo.png"
+                                alt="SmartWill Logo"
+                                height="60px"
+                                objectFit="contain"
+                            />
                         </HStack>
 
                         {/* Mode switch (show only when wallet is connected) */}
