@@ -249,7 +249,7 @@ function App() {
                     <Flex justifyContent="space-between" alignItems="center">
                         <HStack spacing={1}>
                             <Image
-                                src="/logo.png"
+                                src="logo.png"
                                 alt="SmartWill Logo"
                                 height="60px"
                                 objectFit="contain"
