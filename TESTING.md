@@ -6,17 +6,17 @@
 
    ### 🧩 Option 1: Via Chainlist
     - Visit: https://chainlist.org/chain/421614
-   - Click **“Connect Wallet”**, authorize MetaMask, then click **“Add to MetaMask”** for Arbitrum Sepolia :contentReference[oaicite:1]{index=1}.
+   - Click **“Connect Wallet”**, authorize MetaMask, then click **“Add to MetaMask”** for Arbitrum Sepolia 
    - In the MetaMask popup, click **“Approve”**, then **“Switch network”**.
 
    ### ✍️ Option 2: Add Manually
-    - Open MetaMask → click the network dropdown → choose **Settings** → **Networks** → **Add Network** → **Add a network manually** :contentReference[oaicite:2]{index=2}.
+    - Open MetaMask → click the network dropdown → choose **Settings** → **Networks** → **Add Network** → **Add a network manually**
    - Enter the following details:
         - **Network Name**: Arbitrum Sepolia
-        - **RPC URL**: `https://sepolia-rollup.arbitrum.io/rpc` :contentReference[oaicite:3]{index=3}
-        - **Chain ID**: `421614` :contentReference[oaicite:4]{index=4}
+        - **RPC URL**: `https://sepolia-rollup.arbitrum.io/rpc` 
+        - **Chain ID**: `421614`
         - **Currency Symbol**: ETH
-          - **Block Explorer URL**: `https://sepolia.arbiscan.io/` :contentReference[oaicite:5]{index=5}
+          - **Block Explorer URL**: `https://sepolia.arbiscan.io/` 
    - Click **“Save”**, then **“Switch to this network”** in the popup.
 
 3. Get test ETH for Arbitrum Sepolia via the [Alchemy Arbitrum Sepolia Faucet](https://www.alchemy.com/faucets/arbitrum-sepolia).  
