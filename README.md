@@ -1,3 +1,8 @@
+# 📋 Testing
+
+To learn how to test the Smartwill app (using the Arbitrum Sepolia network), see the [testing instructions](./TESTING.md).
+
+
 # SmartWill – The Future of Digital Inheritance
 
 ## 1. Introduction
