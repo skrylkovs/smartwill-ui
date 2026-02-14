@@ -32,26 +32,11 @@ import { RepeatIcon } from "@chakra-ui/icons";
 import { FaUser, FaEthereum, FaClock, FaGift, FaCoins } from "react-icons/fa";
 import SmartWillAbi from "../contracts/SmartWill.json";
 import factoryAbi from "../contracts/SmartWillFactory.json";
+import type { HeirWillInfo } from "../types";
 
 interface HeirWillsProps {
     signer: ethers.Signer;
     factoryAddress: string;
-}
-
-// Interface for heir wills
-export interface HeirWillInfo {
-    address: string;
-    balance: string;
-    ownerAddress: string;
-    heirName: string;
-    heirRole: string;
-    transferAmount: string;
-    transferFrequency: string;
-    waitingPeriod: string;
-    ownerLastActivity: string;
-    limit: string;
-    canClaim: boolean;
-    nextClaimTime: string;
 }
 
 const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) => {

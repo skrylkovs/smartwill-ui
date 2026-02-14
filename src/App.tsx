@@ -34,6 +34,7 @@ import CreateWillForm from "./components/CreateWillForm";
 import MyWills from "./components/MyWills";
 import HeirWills from "./components/HeirWills";
 // import BuyTokenButton from "./components/BuyTokenButton";
+import type { AppMode } from "./types";
 
 // Application configuration
 const CONFIG = {
@@ -42,9 +43,6 @@ const CONFIG = {
     // New factory address with security fixes and fallback functions
     FACTORY_ADDRESS: "0x8B2510CB35B72E2207d4818dc98bB9CC86c47E11"
 };
-
-// Application mode types
-type AppMode = "testator" | "heir";
 
 function App() {
     const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);

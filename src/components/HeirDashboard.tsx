@@ -23,29 +23,15 @@ import { FaHeart, FaClock, FaEthereum, FaUser, FaShieldAlt, FaCheckCircle } from
 import { ethers } from "ethers";
 import { getGasOverrides } from "../utils/gas";
 import smartWillAbi from "../contracts/SmartWill.json";
+import type { WillHeirView } from "../types";
 
 interface Props {
     signer: ethers.Signer;
     willAddress: string;
 }
 
-interface WillInfo {
-    owner: string;
-    heir: string;
-    heirName: string;
-    heirRole: string;
-    transferAmount: bigint;
-    balance: bigint;
-    isOwnerActive: boolean;
-    lastActivity: bigint;
-    willActivateWaitingPeriod: bigint;
-    transferFrequency: bigint;
-    nextPossibleTransferTime: bigint;
-    canTransferNow: boolean;
-}
-
 export default function HeirDashboard({ signer, willAddress }: Props) {
-    const [willInfo, setWillInfo] = useState<WillInfo | null>(null);
+    const [willInfo, setWillInfo] = useState<WillHeirView | null>(null);
     const [loading, setLoading] = useState(false);
     const [transferLoading, setTransferLoading] = useState(false);
     const [countdown, setCountdown] = useState<string>("");

@@ -22,28 +22,15 @@ import {
 import { FaHeart, FaClock, FaEthereum, FaUser, FaShieldAlt, FaCheck } from "react-icons/fa";
 import { ethers } from "ethers";
 import smartWillAbi from "../contracts/SmartWill.json";
+import type { WillOwnerView } from "../types";
 
 interface Props {
     signer: ethers.Signer;
     willAddress: string;
 }
 
-interface WillInfo {
-    owner: string;
-    heir: string;
-    heirName: string;
-    heirRole: string;
-    transferAmount: bigint;
-    balance: bigint;
-    isOwnerActive: boolean;
-    lastActivity: bigint;
-    willActivateWaitingPeriod: bigint;
-    transferFrequency: bigint;
-    nextPossibleTransferTime: bigint;
-}
-
 export default function OwnerDashboard({ signer, willAddress }: Props) {
-    const [willInfo, setWillInfo] = useState<WillInfo | null>(null);
+    const [willInfo, setWillInfo] = useState<WillOwnerView | null>(null);
     const [loading, setLoading] = useState(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
     const [timeUntilInactive, setTimeUntilInactive] = useState<number>(0);

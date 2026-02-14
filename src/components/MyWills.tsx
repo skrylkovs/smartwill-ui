@@ -32,23 +32,11 @@ import { RepeatIcon } from "@chakra-ui/icons";
 import { FaWallet, FaUser, FaEthereum, FaClock, FaHeartbeat, FaFileContract } from "react-icons/fa";
 import SmartWillAbi from "../contracts/SmartWill.json";
 import factoryAbi from "../contracts/SmartWillFactory.json";
+import type { WillInfo } from "../types";
 
 interface MyWillsProps {
     signer: ethers.Signer;
     factoryAddress: string;
-}
-
-// Export type for use in other components
-export interface WillInfo {
-    address: string;
-    balance: string;
-    heir: string;
-    heirName: string;
-    heirRole: string;
-    transferAmount: string;
-    transferFrequency: string;
-    waitingPeriod: string;
-    limit: string;
 }
 
 // Change to forwardRef and export methods via useImperativeHandle
