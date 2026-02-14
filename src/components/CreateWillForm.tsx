@@ -1,30 +1,7 @@
 import { useState, useEffect } from "react";
-import {
-    Box,
-    Button,
-    FormControl,
-    FormLabel,
-    Input,
-    VStack,
-    useToast,
-    Text,
-    Alert,
-    AlertIcon,
-    AlertTitle,
-    AlertDescription,
-    Grid,
-    Heading,
-    useColorModeValue,
-    Icon,
-    HStack,
-    Divider,
-    NumberInput,
-    NumberInputField,
-    NumberInputStepper,
-    NumberIncrementStepper,
-    NumberDecrementStepper,
-    Badge
-} from "@chakra-ui/react";
+import { Box, Button, FormControl, FormLabel, Input, VStack, useToast, Text, Alert, AlertIcon,
+    AlertTitle, AlertDescription, Grid, Heading, useColorModeValue, Icon, HStack, Divider,
+    NumberInput, NumberInputField, NumberInputStepper, NumberIncrementStepper, NumberDecrementStepper, Badge } from "@chakra-ui/react";
 import { FaUser, FaEthereum, FaClock, FaShieldAlt } from "react-icons/fa";
 import { ethers } from "ethers";
 import { getGasOverrides } from "../utils/gas";

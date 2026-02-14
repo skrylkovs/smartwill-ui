@@ -1,22 +1,8 @@
 import { useState } from "react";
 import { ethers } from "ethers";
 import {
-    Box,
-    Button,
-    Text,
-    VStack,
-    HStack,
-    Heading,
-    Alert,
-    AlertIcon,
-    AlertDescription,
-    Code,
-    Divider,
-    useColorModeValue,
-    Badge,
-    Icon,
-    Collapse,
-    useDisclosure
+    Box, Button, Text, VStack, HStack, Heading, Alert, AlertIcon, AlertDescription,
+    Code, Divider, useColorModeValue, Badge, Icon, Collapse, useDisclosure
 } from "@chakra-ui/react";
 import { FaBug, FaInfoCircle } from "react-icons/fa";
 import factoryAbi from "../contracts/SmartWillFactory.json";

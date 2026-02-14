@@ -1,26 +1,10 @@
 import { useState, useEffect } from "react";
 import {
-    Box,
-    Button,
-    VStack,
-    HStack,
-    Text,
-    Alert,
-    AlertIcon,
-    AlertTitle,
-    AlertDescription,
-    Heading,
-    useColorModeValue,
-    Icon,
-    Badge,
-    useToast,
-    Card,
-    CardBody,
-    CardHeader,
-    Progress
+    Box, Button, VStack, HStack, Text, Alert, AlertIcon, AlertTitle, AlertDescription,
+    Heading, useColorModeValue, Icon, Badge, useToast, Card, CardBody, CardHeader, Progress
 } from "@chakra-ui/react";
-import { FaHeart, FaClock, FaEthereum, FaUser, FaShieldAlt, FaCheck } from "react-icons/fa";
-import { ethers } from "ethers";
+import {FaHeart, FaClock, FaEthereum, FaUser, FaShieldAlt, FaCheck} from "react-icons/fa";
+import {ethers} from "ethers";
 import smartWillAbi from "../contracts/SmartWill.json";
 import type { WillOwnerView } from "../types";
 

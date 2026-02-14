@@ -1,33 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import { ethers } from "ethers";
 import {
-    Button,
-    Container,
-    Heading,
-    Text,
-    VStack,
-    HStack,
-    Box,
-    Alert,
-    AlertIcon,
-    AlertTitle,
-    AlertDescription,
-    Flex,
-    useColorModeValue,
-    Badge,
-    Icon,
-    Switch,
-    FormControl,
-    FormLabel,
-    Image,
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    useDisclosure,
-    Link
+    Button, Container, Heading, Text, VStack, HStack, Box, Alert, AlertIcon, AlertTitle,
+    AlertDescription, Flex, useColorModeValue, Badge, Icon, Switch, FormControl, FormLabel,
+    Image, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Link
 } from "@chakra-ui/react";
 import { FaWallet, FaFileContract, FaShieldAlt } from "react-icons/fa";
 import CreateWillForm from "./components/CreateWillForm";

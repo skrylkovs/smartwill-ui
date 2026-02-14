@@ -1,23 +1,7 @@
 import { useState, useEffect } from "react";
 import {
-    Box,
-    Card,
-    CardBody,
-    CardHeader,
-    Heading,
-    Text,
-    Badge,
-    Button,
-    VStack,
-    HStack,
-    Progress,
-    Alert,
-    AlertIcon,
-    AlertTitle,
-    AlertDescription,
-    Divider,
-    useToast,
-    Icon
+    Box, Card, CardBody, CardHeader, Heading, Text, Badge, Button, VStack, HStack,
+    Progress, Alert, AlertIcon, AlertTitle, AlertDescription, Divider, useToast, Icon
 } from "@chakra-ui/react";
 import { FaHeart, FaClock, FaEthereum, FaUser, FaShieldAlt, FaCheckCircle } from "react-icons/fa";
 import { ethers } from "ethers";
