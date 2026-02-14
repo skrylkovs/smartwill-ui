@@ -19,7 +19,15 @@ import {
     Switch,
     FormControl,
     FormLabel,
-    Image
+    Image,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+    useDisclosure,
+    Link
 } from "@chakra-ui/react";
 import { FaWallet, FaFileContract, FaShieldAlt } from "react-icons/fa";
 import CreateWillForm from "./components/CreateWillForm";
@@ -47,6 +55,18 @@ function App() {
     const [appMode, setAppMode] = useState<AppMode>("testator");
     const myWillsRef = useRef<any>(null);
     const heirWillsRef = useRef<any>(null);
+    const { isOpen: isDisclaimerOpen, onOpen: onDisclaimerOpen, onClose: onDisclaimerClose } = useDisclosure();
+
+    // Show testnet disclaimer popup on load (once per day)
+    useEffect(() => {
+        const dismissedAt = localStorage.getItem('smartwill-disclaimer-dismissed');
+        if (dismissedAt) {
+            const elapsed = Date.now() - Number(dismissedAt);
+            const oneDay = 24 * 60 * 60 * 1000;
+            if (elapsed < oneDay) return;
+        }
+        onDisclaimerOpen();
+    }, []);
 
     // Load app mode from localStorage on initialization
     useEffect(() => {
@@ -337,6 +357,27 @@ function App() {
                 </Container>
             </Box>
 
+            {/* Testnet prototype warning banner */}
+            <Alert
+                status="warning"
+                variant="subtle"
+                justifyContent="center"
+                py={2}
+                px={4}
+                bg="orange.50"
+                borderBottom="1px solid"
+                borderColor="orange.200"
+            >
+                <AlertIcon boxSize={4} />
+                <Text fontSize={{ base: "lg", xl: "sm" }} color="orange.800" textAlign="center">
+                    SmartWill is a prototype running on the{" "}
+                    <Link href="https://sepolia.arbiscan.io/" isExternal fontWeight="bold" textDecoration="underline">
+                        Arbitrum Sepolia testnet
+                    </Link>
+                    {" "}to validate the core logic and demonstrate time-based inheritance distribution before mainnet launch.
+                </Text>
+            </Alert>
+
             <Container py={12} maxW="container.xl">
                 <VStack spacing={8}>
                     {!isCorrectNetwork && network && (
@@ -522,6 +563,54 @@ function App() {
                     )}
                 </VStack>
             </Container>
+
+            {/* Testnet disclaimer popup */}
+            <Modal isOpen={isDisclaimerOpen} onClose={onDisclaimerClose} isCentered size="lg" closeOnOverlayClick={false}>
+                <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+                <ModalContent borderRadius="xl" mx={4}>
+                    <ModalHeader
+                        fontSize={{ base: "2xl", xl: "xl" }}
+                        fontWeight="bold"
+                        textAlign="center"
+                        pt={6}
+                        pb={2}
+                    >
+                        SmartWill Prototype (Testnet Version)
+                    </ModalHeader>
+                    <ModalBody px={8} pb={2}>
+                        <Text fontSize={{ base: "xl", xl: "md" }} color="gray.600" lineHeight="tall" textAlign="center">
+                            SmartWill is currently a prototype running on the{" "}
+                            <Link href="https://sepolia.arbiscan.io/" isExternal fontWeight="bold" textDecoration="underline">
+                                Arbitrum Sepolia test network
+                            </Link>
+                            , created to validate the core smart contract logic, test the user experience,
+                            and demonstrate how time-based inheritance distribution works in a secure
+                            and decentralized environment before launching on mainnet.
+                        </Text>
+                    </ModalBody>
+                    <ModalFooter justifyContent="center" pb={6} pt={4}>
+                        <Button
+                            colorScheme="blue"
+                            size="lg"
+                            px={10}
+                            borderRadius="xl"
+                            fontSize={{ base: "xl", xl: "md" }}
+                            bgGradient="linear(to-r, #081781, #061264)"
+                            _hover={{
+                                bgGradient: "linear(to-r, #061264, #040d47)",
+                                transform: "translateY(-1px)",
+                                boxShadow: "lg"
+                            }}
+                            onClick={() => {
+                                localStorage.setItem('smartwill-disclaimer-dismissed', String(Date.now()));
+                                onDisclaimerClose();
+                            }}
+                        >
+                            Got it
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
         </Box>
     );
 }
