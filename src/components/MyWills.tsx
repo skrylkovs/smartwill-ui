@@ -11,6 +11,7 @@ import { FaWallet, FaUser, FaEthereum, FaClock, FaHeartbeat, FaFileContract } fr
 import SmartWillAbi from "../contracts/SmartWill.json";
 import factoryAbi from "../contracts/SmartWillFactory.json";
 import type { WillInfo } from "../types";
+import { formatTime } from "../utils/format";
 
 interface MyWillsProps {
     signer: ethers.Signer;
@@ -28,19 +29,6 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const cardBg = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.600', 'gray.300');
     const borderColor = useColorModeValue('gray.200', 'gray.600');
-
-    // Function to format time in seconds to readable format
-    const formatTime = (seconds: number): string => {
-        if (seconds < 60) return `${seconds} sec.`;
-        if (seconds < 3600) {
-            const minutes = Math.floor(seconds / 60);
-            return `${minutes} min.`;
-        }
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        if (minutes === 0) return `${hours} h.`;
-        return `${hours} h. ${minutes} min.`;
-    };
 
     // Get will information
     const fetchWillInfo = async (willAddress: string, retryCount = 3, delayMs = 1000): Promise<WillInfo | null> => {

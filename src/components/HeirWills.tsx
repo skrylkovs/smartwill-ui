@@ -11,6 +11,7 @@ import { FaUser, FaEthereum, FaClock, FaGift, FaCoins } from "react-icons/fa";
 import SmartWillAbi from "../contracts/SmartWill.json";
 import factoryAbi from "../contracts/SmartWillFactory.json";
 import type { HeirWillInfo } from "../types";
+import { formatTime } from "../utils/format";
 
 interface HeirWillsProps {
     signer: ethers.Signer;
@@ -42,19 +43,6 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
             console.log(`🏁 HeirWills component unmounted. Total requests: ${requestCountRef.current}`);
         };
     }, []);
-
-    // Function to format time in seconds to readable format
-    const formatTime = (seconds: number): string => {
-        if (seconds < 60) {
-            return `${seconds} sec`;
-        } else if (seconds < 3600) {
-            return `${Math.floor(seconds / 60)} min`;
-        } else if (seconds < 86400) {
-            return `${Math.floor(seconds / 3600)} h ${Math.floor((seconds % 3600) / 60)} min`;
-        } else {
-            return `${Math.floor(seconds / 86400)} d ${Math.floor((seconds % 86400) / 3600)} h`;
-        }
-    };
 
     const formatNextClaimTime = (nextTransferTime: string, ownerLastActivity: string, waitingPeriod: string): string => {
         const nextTime = parseInt(nextTransferTime);
