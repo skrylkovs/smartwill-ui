@@ -33,7 +33,7 @@ import { FaWallet, FaFileContract, FaShieldAlt } from "react-icons/fa";
 import CreateWillForm from "./components/CreateWillForm";
 import MyWills from "./components/MyWills";
 import HeirWills from "./components/HeirWills";
-import BuyTokenButton from "./components/BuyTokenButton";
+// import BuyTokenButton from "./components/BuyTokenButton";
 
 // Application configuration
 const CONFIG = {
@@ -558,7 +558,7 @@ function App() {
                             </Box>
 
                             {/* Кнопка покупки токенов INCO */}
-                            <BuyTokenButton signer={signer!} tokenAddress={"0x5442632707a34832f96616fe9A8FE440f714Dc45"} />
+                            {/* <BuyTokenButton signer={signer!} tokenAddress={"0x5442632707a34832f96616fe9A8FE440f714Dc45"} />  */}
                         </>
                     )}
                 </VStack>
