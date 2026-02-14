@@ -1,5 +1,6 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { ethers } from "ethers";
+import { getGasOverrides } from "../utils/gas";
 import {
     Box,
     Button,
@@ -197,8 +198,12 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
 
             console.log("📤 Sending ping...");
 
-            // Send one ping to factory
-            const pingTx = await factory.ping();
+            // Get gas overrides to avoid "maxFeePerGas less than block base fee" error
+            const gasOverrides = await getGasOverrides(signer);
+            console.log('gasOverrides', gasOverrides);
+
+            // Send one ping to factory with explicit gas fee
+            const pingTx = await factory.ping(gasOverrides);
             console.log("⏳ Waiting for ping transaction confirmation...");
 
             // Wait for transaction confirmation

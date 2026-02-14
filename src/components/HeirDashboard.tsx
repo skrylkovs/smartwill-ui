@@ -21,6 +21,7 @@ import {
 } from "@chakra-ui/react";
 import { FaHeart, FaClock, FaEthereum, FaUser, FaShieldAlt, FaCheckCircle } from "react-icons/fa";
 import { ethers } from "ethers";
+import { getGasOverrides } from "../utils/gas";
 import smartWillAbi from "../contracts/SmartWill.json";
 
 interface Props {
@@ -163,7 +164,10 @@ export default function HeirDashboard({ signer, willAddress }: Props) {
             setTransferLoading(true);
             const will = new ethers.Contract(willAddress, smartWillAbi.abi, signer);
 
-            const tx = await will.transferToHeir();
+            // Get gas overrides to avoid "maxFeePerGas less than block base fee" error
+            const gasOverrides = await getGasOverrides(signer);
+
+            const tx = await will.transferToHeir(gasOverrides);
 
             toast({
                 title: "Transaction Sent",

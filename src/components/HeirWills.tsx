@@ -1,5 +1,6 @@
 import { useState, useEffect, forwardRef, useImperativeHandle, useRef, useCallback, useMemo } from "react";
 import { ethers } from "ethers";
+import { getGasOverrides } from "../utils/gas";
 import {
     Box,
     Button,
@@ -380,8 +381,11 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
             setClaimingWill(willAddress);
             const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
 
+            // Get gas overrides to avoid "maxFeePerGas less than block base fee" error
+            const gasOverrides = await getGasOverrides(signer);
+
             // Call function to claim funds
-            const tx = await contract.transferToHeir();
+            const tx = await contract.transferToHeir(gasOverrides);
 
             toast({
                 title: "Transaction Sent",

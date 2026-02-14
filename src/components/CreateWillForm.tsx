@@ -27,6 +27,7 @@ import {
 } from "@chakra-ui/react";
 import { FaUser, FaEthereum, FaClock, FaShieldAlt } from "react-icons/fa";
 import { ethers } from "ethers";
+import { getGasOverrides } from "../utils/gas";
 import factoryAbi from "../contracts/SmartWillFactory.json";
 
 interface Props {
@@ -148,9 +149,6 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
 
             console.log("✅ Factory contract verified");
 
-            // Add gas limit to solve estimateGas problem
-            const gasLimit = ethers.toBigInt(1500000); // Increased gas limit
-
             // Log parameters for debugging
             console.log("🔧 Parameters for createSmartWill:");
             console.log("- heir:", form.heir);
@@ -161,27 +159,10 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
             console.log("- waitingPeriod:", waitingPeriod, "seconds");
             console.log("- limit:", ethers.formatEther(limitWei), "ETH");
             console.log("- value:", ethers.formatEther(limitWei), "ETH");
-            console.log("- gasLimit:", gasLimit.toString());
 
-            // Gas estimation attempt
-            try {
-                const estimatedGas = await factory.createSmartWill.estimateGas(
-                    form.heir,
-                    form.heirName,
-                    form.heirRole,
-                    transferAmountWei,
-                    frequency,
-                    waitingPeriod,
-                    limitWei,
-                    {
-                        value: limitWei
-                    }
-                );
-                console.log("⛽ Estimated gas:", estimatedGas.toString());
-            } catch (gasError) {
-                console.warn("⚠️ Gas estimation failed:", gasError);
-                console.log("🔄 Proceeding with manual gas limit...");
-            }
+            // Get gas fee overrides to avoid "maxFeePerGas less than block base fee" error
+            const gasOverrides = await getGasOverrides(signer);
+            console.log(`⛽ maxFeePerGas: ${gasOverrides.maxFeePerGas}`);
 
             const tx = await factory.createSmartWill(
                 form.heir,
@@ -193,7 +174,7 @@ export default function CreateWillForm({ signer, onWillCreated, factoryAddress }
                 limitWei,
                 {
                     value: limitWei,
-                    gasLimit: gasLimit
+                    ...gasOverrides
                 }
             );
 
