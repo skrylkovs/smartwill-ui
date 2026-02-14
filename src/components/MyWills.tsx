@@ -8,6 +8,7 @@ import {
 } from "@chakra-ui/react";
 import { RepeatIcon } from "@chakra-ui/icons";
 import { FaWallet, FaUser, FaEthereum, FaClock, FaHeartbeat, FaFileContract } from "react-icons/fa";
+import pRetry from "p-retry";
 import SmartWillAbi from "../contracts/SmartWill.json";
 import factoryAbi from "../contracts/SmartWillFactory.json";
 import type { WillInfo } from "../types";
@@ -31,48 +32,43 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const borderColor = useColorModeValue('gray.200', 'gray.600');
 
     // Get will information
-    const fetchWillInfo = async (willAddress: string, retryCount = 3, delayMs = 1000): Promise<WillInfo | null> => {
+    const fetchWillInfo = async (willAddress: string): Promise<WillInfo | null> => {
         try {
-            const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
+            return await pRetry(async () => {
+                const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
 
-            // Get main information from will contract
-            const [balance, heir, heirName, heirRole, transferAmount, transferFrequency, waitingPeriod, limit] = await Promise.all([
-                contract.getBalance(),
-                contract.heir(),
-                contract.heirName(),
-                contract.heirRole(),
-                contract.transferAmount(),
-                contract.transferFrequency(),
-                contract.willActivateWaitingPeriod(),
-                contract.limit()
-            ]);
+                const [balance, heir, heirName, heirRole, transferAmount, transferFrequency, waitingPeriod, limit] = await Promise.all([
+                    contract.getBalance(),
+                    contract.heir(),
+                    contract.heirName(),
+                    contract.heirRole(),
+                    contract.transferAmount(),
+                    contract.transferFrequency(),
+                    contract.willActivateWaitingPeriod(),
+                    contract.limit()
+                ]);
 
-            return {
-                address: willAddress,
-                balance: ethers.formatEther(balance),
-                heir,
-                heirName,
-                heirRole,
-                transferAmount: ethers.formatEther(transferAmount),
-                transferFrequency: transferFrequency.toString(),
-                waitingPeriod: waitingPeriod.toString(),
-                limit: ethers.formatEther(limit)
-            };
+                return {
+                    address: willAddress,
+                    balance: ethers.formatEther(balance),
+                    heir,
+                    heirName,
+                    heirRole,
+                    transferAmount: ethers.formatEther(transferAmount),
+                    transferFrequency: transferFrequency.toString(),
+                    waitingPeriod: waitingPeriod.toString(),
+                    limit: ethers.formatEther(limit)
+                };
+            }, {
+                retries: 3,
+                minTimeout: 1000,
+                factor: 1.5,
+                onFailedAttempt: ({ attemptNumber, retriesLeft, error }) => {
+                    console.warn(`Retry ${attemptNumber}/${attemptNumber + retriesLeft} for contract ${willAddress}: ${error.message}`);
+                }
+            });
         } catch (error) {
-            console.error(`Error getting will information ${willAddress}:`, error);
-
-            // If we have retries left, wait and try again
-            if (retryCount > 0) {
-                console.log(`Retry attempt (${retryCount} left) for contract ${willAddress} after ${delayMs}ms...`);
-
-                // Wait for specified time
-                await new Promise(resolve => setTimeout(resolve, delayMs));
-
-                // Recursively call function with decreased retry counter
-                return fetchWillInfo(willAddress, retryCount - 1, delayMs * 1.5);
-            }
-
-            // Return null if all retries exhausted
+            console.error(`Error getting will information ${willAddress} after all retries:`, error);
             return null;
         }
     };

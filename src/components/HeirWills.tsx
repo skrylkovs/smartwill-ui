@@ -8,6 +8,7 @@ import {
 } from "@chakra-ui/react";
 import { RepeatIcon } from "@chakra-ui/icons";
 import { FaUser, FaEthereum, FaClock, FaGift, FaCoins } from "react-icons/fa";
+import pRetry, { AbortError } from "p-retry";
 import SmartWillAbi from "../contracts/SmartWill.json";
 import factoryAbi from "../contracts/SmartWillFactory.json";
 import type { HeirWillInfo } from "../types";
@@ -78,156 +79,82 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
         return `In ${formatTime(timeLeft)}`;
     };
 
-    // Get will information for heir with caching
+    // Get will information for heir with caching and retry
     const fetchHeirWillInfo = useCallback(async (willAddress: string, userAddress: string): Promise<HeirWillInfo | null> => {
+        requestCountRef.current += 1;
+
+        // Check cache
+        const cacheKey = `${willAddress}-${userAddress}`;
+        const cached = cacheRef.current.get(cacheKey);
+        if (cached) {
+            console.log(`📋 Using cache for will ${willAddress}... (request #${requestCountRef.current})`);
+            return cached;
+        }
+
         try {
-            requestCountRef.current += 1;
+            const willInfo = await pRetry(async () => {
+                console.log(`📋 Analyzing will for heir ${willAddress}... (request #${requestCountRef.current})`);
+                const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
 
-            // Check cache
-            const cacheKey = `${willAddress}-${userAddress}`;
-            const cached = cacheRef.current.get(cacheKey);
-            if (cached) {
-                console.log(`📋 Using cache for will ${willAddress}... (request #${requestCountRef.current})`);
-                return cached;
-            }
+                const heir = await contract.heir();
 
-            console.log(`📋 Analyzing will for heir ${willAddress}... (request #${requestCountRef.current})`);
-
-            const willContract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
-
-            // Sequential calls with individual error handling
-            let balance, heir, heirName, heirRole, transferAmount, transferFrequency;
-            let waitingPeriod, ownerLastActivity, limit, ownerAddress, canTransferNow, nextTransferTime;
-
-            try {
-                balance = await willContract.getBalance();
-            } catch (error) {
-                console.error(`Error getting balance for ${willAddress}:`, error);
-                return null;
-            }
-
-            try {
-                heir = await willContract.heir();
-            } catch (error) {
-                console.error(`Error getting heir for ${willAddress}:`, error);
-                return null;
-            }
-
-            // Check if user is the heir
-            if (heir.toLowerCase() !== userAddress.toLowerCase()) {
-                console.log(`❌ User is not heir of will ${willAddress}`);
-                return null;
-            }
-
-            try {
-                heirName = await willContract.heirName();
-            } catch (error) {
-                console.warn(`Warning: could not get heir name for ${willAddress}:`, error);
-                heirName = "Not specified";
-            }
-
-            try {
-                heirRole = await willContract.heirRole();
-            } catch (error) {
-                console.warn(`Warning: could not get heir role for ${willAddress}:`, error);
-                heirRole = "Not specified";
-            }
-
-            try {
-                transferAmount = await willContract.transferAmount();
-            } catch (error) {
-                console.error(`Error getting transfer amount for ${willAddress}:`, error);
-                return null;
-            }
-
-            try {
-                transferFrequency = await willContract.transferFrequency();
-            } catch (error) {
-                console.warn(`Warning: could not get transfer frequency for ${willAddress}:`, error);
-                transferFrequency = BigInt(0);
-            }
-
-            try {
-                waitingPeriod = await willContract.willActivateWaitingPeriod();
-            } catch (error) {
-                console.warn(`Warning: could not get waiting period for ${willAddress}:`, error);
-                waitingPeriod = BigInt(0);
-            }
-
-            try {
-                ownerLastActivity = await willContract.getOwnerLastActivity();
-            } catch (error) {
-                console.warn(`Warning: could not get owner last activity for ${willAddress}:`, error);
-                ownerLastActivity = BigInt(0);
-            }
-
-            try {
-                limit = await willContract.limit();
-            } catch (error) {
-                console.warn(`Warning: could not get limit for ${willAddress}:`, error);
-                limit = BigInt(0);
-            }
-
-            try {
-                ownerAddress = await willContract.owner();
-            } catch (error) {
-                console.warn(`Warning: could not get owner address for ${willAddress}:`, error);
-                ownerAddress = "0x0000000000000000000000000000000000000000";
-            }
-
-            try {
-                canTransferNow = await willContract.canTransferNow();
-            } catch (error) {
-                console.warn(`Warning: could not check transfer possibility for ${willAddress}:`, error);
-                canTransferNow = false;
-            }
-
-            try {
-                nextTransferTime = await willContract.getNextTransferTime();
-            } catch (error) {
-                console.warn(`Warning: could not get next transfer time for ${willAddress}:`, error);
-                // Try alternative method
-                try {
-                    nextTransferTime = await willContract.getNextPossibleTransferTime();
-                } catch (altError) {
-                    console.warn(`Alternative method also unavailable for ${willAddress}:`, altError);
-                    nextTransferTime = BigInt(0);
+                // Not heir — abort retries immediately (not a transient error)
+                if (heir.toLowerCase() !== userAddress.toLowerCase()) {
+                    throw new AbortError(`User is not heir of will ${willAddress}`);
                 }
-            }
 
-            console.log(`✅ Will ${willAddress}: heir=${heir}, user=${userAddress}, canTransfer=${canTransferNow}`);
+                const [ balance, transferAmount, heirName, heirRole, transferFrequency, waitingPeriod,
+                        ownerLastActivity, limit, ownerAddress, canTransferNow, nextTransferTime
+                ] = await Promise.all([
+                    contract.getBalance(),
+                    contract.transferAmount(),
+                    contract.heirName(),
+                    contract.heirRole(),
+                    contract.transferFrequency(),
+                    contract.willActivateWaitingPeriod(),
+                    contract.getOwnerLastActivity(),
+                    contract.limit(),
+                    contract.owner(),
+                    contract.canTransferNow(),
+                    contract.getNextTransferTime().catch(() => contract.getNextPossibleTransferTime())
+                ]);
 
-            // Check if heir can claim funds now
-            const hasEnoughBalance = balance >= transferAmount;
-            const canClaim = hasEnoughBalance && canTransferNow;
+                const canClaim = balance >= transferAmount && canTransferNow;
+                console.log(`✅ Will ${willAddress}: heir=${heir}, canTransfer=${canTransferNow}, canClaim=${canClaim}`);
 
-            console.log(`📊 Will ${willAddress}: balance=${ethers.formatEther(balance)} ETH, transferAmount=${ethers.formatEther(transferAmount)} ETH, canClaim=${canClaim}`);
-
-            const willInfo: HeirWillInfo = {
-                address: willAddress,
-                balance: ethers.formatEther(balance),
-                ownerAddress,
-                heirName,
-                heirRole,
-                transferAmount: ethers.formatEther(transferAmount),
-                transferFrequency: transferFrequency.toString(),
-                waitingPeriod: waitingPeriod.toString(),
-                ownerLastActivity: ownerLastActivity.toString(),
-                limit: ethers.formatEther(limit),
-                canClaim,
-                nextClaimTime: nextTransferTime.toString()
-            };
+                return {
+                    address: willAddress,
+                    balance: ethers.formatEther(balance),
+                    ownerAddress,
+                    heirName,
+                    heirRole,
+                    transferAmount: ethers.formatEther(transferAmount),
+                    transferFrequency: transferFrequency.toString(),
+                    waitingPeriod: waitingPeriod.toString(),
+                    ownerLastActivity: ownerLastActivity.toString(),
+                    limit: ethers.formatEther(limit as bigint),
+                    canClaim,
+                    nextClaimTime: nextTransferTime.toString()
+                } as HeirWillInfo;
+            }, {
+                retries: 3,
+                minTimeout: 1000,
+                factor: 1.5,
+                onFailedAttempt: ({ attemptNumber, retriesLeft, error }) => {
+                    console.warn(`fetchHeirWillInfo retry ${attemptNumber}/${attemptNumber + retriesLeft} for ${willAddress}: ${error.message}`);
+                }
+            });
 
             // Cache result for 30 seconds
             cacheRef.current.set(cacheKey, willInfo);
-            setTimeout(() => {
-                cacheRef.current.delete(cacheKey);
-            }, 30000);
-
+            setTimeout(() => { cacheRef.current.delete(cacheKey); }, 30000);
             return willInfo;
-
         } catch (error) {
-            console.error(`❌ Error analyzing will ${willAddress}:`, error);
+            if (error instanceof AbortError) {
+                console.log(`❌ ${(error as Error).message}`);
+            } else {
+                console.error(`❌ Error analyzing will ${willAddress} after all retries:`, error);
+            }
             return null;
         }
     }, [signer]);
