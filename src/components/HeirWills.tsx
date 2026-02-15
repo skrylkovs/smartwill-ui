@@ -131,17 +131,11 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                 }
             });
 
-            // Cache result for 30 seconds
+            // Cache until explicit refresh
             cacheRef.current.set(cacheKey, willInfo);
-            setTimeout(() => { cacheRef.current.delete(cacheKey); }, 30000);
             return willInfo;
         } catch (error) {
-            if (error instanceof AbortError) {
-                console.log(`❌ ${(error as Error).message}`);
-            } else {
-                console.error(`❌ Error analyzing will ${willAddress} after all retries:`, error);
-            }
-            return null;
+            console.error(`❌ Error analyzing will ${willAddress} after all retries:`, error);
         }
     }, [signer]);
 
