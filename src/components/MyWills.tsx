@@ -135,27 +135,11 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             setLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
 
-            let willsList: string[] = [];
-            try {
-                willsList = await factory.getMyWills();
-            } catch (error) {
-                console.log("⚠️ factory getMyWills() error", error);
-            }
-
-            // If no wills found, finish
-            if (willsList.length === 0) {
-                console.log("ℹ️ No wills found for current user");
-                setWills([]);
-                await fetchLastPing();
-                return;
-            }
-
-            console.log("📄 Will addresses willsList:", willsList);
+            // Get will addresses from factory
+            const willsList: string[] = await factory.getMyWills();
 
             // Get information about each will
             const wills = await Promise.all(willsList.map(address => fetchWillInfo(address)));
-            console.log("✅ Successfully loaded wills:", wills);
-
             setWills(wills);
 
             // Get last ping information
