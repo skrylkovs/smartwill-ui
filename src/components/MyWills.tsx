@@ -224,11 +224,6 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
         try {
             setLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
-            const userAddress = await signer.getAddress();
-
-            console.log("🔍 Wills loading diagnostics:");
-            console.log("👤 User address:", userAddress);
-            console.log("🏭 Factory address:", factoryAddress);
 
             // Try to get current user's wills using different methods
             let willsList: string[] = [];
@@ -236,54 +231,8 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             // Method 1: Try getMyWills() if available
             try {
                 willsList = await factory.getMyWills();
-                console.log("✅ Found current user's wills via getMyWills():", willsList.length);
             } catch (error) {
-                console.log("⚠️ getMyWills() not available, trying alternative methods:", error);
-
-                // Method 2: Try to get all wills and filter by owner
-                try {
-                    const allWills = await factory.getDeployedWills();
-                    console.log("📊 Total wills in factory:", allWills.length);
-
-                    // Check each will to see if current user is the owner
-                    const userWills: string[] = [];
-                    for (const willAddress of allWills) {
-                        try {
-                            const willContract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
-                            const owner = await willContract.owner();
-                            if (owner.toLowerCase() === userAddress.toLowerCase()) {
-                                userWills.push(willAddress);
-                            }
-                        } catch (willError) {
-                            console.warn(`Failed to check will ${willAddress}:`, willError);
-                        }
-                    }
-                    willsList = userWills;
-                    console.log("✅ Found user's wills by filtering:", willsList.length);
-                } catch (allWillsError) {
-                    console.error("❌ Failed to get all wills:", allWillsError);
-
-                    // Method 3: Try mapping directly (if exists)
-                    try {
-                        const userWillsFromMapping: string[] = [];
-                        let index = 0;
-                        while (true) {
-                            try {
-                                const willAddress = await factory.ownerToWills(userAddress, index);
-                                if (willAddress === ethers.ZeroAddress) break;
-                                userWillsFromMapping.push(willAddress);
-                                index++;
-                            } catch {
-                                break;
-                            }
-                        }
-                        willsList = userWillsFromMapping;
-                        console.log("✅ Found user's wills via mapping:", willsList.length);
-                    } catch (mappingError) {
-                        console.error("❌ Failed to access mapping:", mappingError);
-                        willsList = [];
-                    }
-                }
+                console.log("⚠️ factory getMyWills() error", error);
             }
 
             // If no wills found, finish
@@ -294,7 +243,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 return;
             }
 
-            console.log("📄 Will addresses to process:", willsList);
+            console.log("📄 Will addresses willsList:", willsList);
 
             // Get information about each will
             const willsInfoPromises = willsList.map(address => fetchWillInfo(address));
@@ -323,30 +272,6 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
         }
     };
 
-    // Export methods via ref
-    useImperativeHandle(ref, () => ({
-        loadWills,
-        refreshWills: () => {
-            if (signer) {
-                loadWills();
-                toast({
-                    title: "Data Update",
-                    description: "Loading latest will data...",
-                    status: "info",
-                    duration: 2000,
-                    isClosable: true
-                });
-            }
-        }
-    }));
-
-    // Loading hook on mount
-    useEffect(() => {
-        if (signer && factoryAddress) {
-            loadWills();
-        }
-    }, [signer, factoryAddress]);
-
     // Method to force data refresh
     const refreshWills = () => {
         if (signer) {
@@ -360,6 +285,19 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             });
         }
     };
+
+    // Export methods via ref
+    useImperativeHandle(ref, () => ({
+        loadWills,
+        refreshWills
+    }));
+
+    // Loading hook on mount
+    useEffect(() => {
+        if (signer && factoryAddress) {
+            loadWills();
+        }
+    }, [signer, factoryAddress]);
 
     return (
         <VStack spacing={8} align="stretch" w="100%">
