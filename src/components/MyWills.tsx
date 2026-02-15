@@ -74,123 +74,38 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             if (!signer) return;
 
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
-            const signerAddress = await signer.getAddress();
+            const lastPingTimestamp = await factory.getLastPing();
 
-            // Try to get last ping in different ways
-            try {
-                // First try calling getLastPing()
-                try {
-                    const lastPingTimestamp = await factory.getLastPing();
-
-                    if (lastPingTimestamp > 0) {
-                        setLastPing(new Date(Number(lastPingTimestamp) * 1000).toLocaleString());
-                        return;
-                    }
-                } catch (error) {
-                    console.error("Failed to get lastPing via getLastPing():", error);
-                }
-
-                // Then try to get via lastPings mapping
-                try {
-                    const lastPingTimestamp = await factory.lastPings(signerAddress);
-
-                    if (lastPingTimestamp > 0) {
-                        setLastPing(new Date(Number(lastPingTimestamp) * 1000).toLocaleString());
-                        return;
-                    }
-                } catch (error) {
-                    console.error("Failed to get lastPing via lastPings:", error);
-                }
-
-                // Try via getLastPingOf if implemented
-                try {
-                    const lastPingTimestamp = await factory.getLastPingOf(signerAddress);
-
-                    if (lastPingTimestamp > 0) {
-                        setLastPing(new Date(Number(lastPingTimestamp) * 1000).toLocaleString());
-                        return;
-                    }
-                } catch (error) {
-                    console.error("Failed to get lastPing via getLastPingOf:", error);
-                }
-
-                setLastPing("No last ping data");
-            } catch (error) {
-                console.error("All lastPing methods failed:", error);
-                setLastPing("Error getting data");
+            if (lastPingTimestamp > 0) {
+                setLastPing(new Date(Number(lastPingTimestamp) * 1000).toLocaleString());
+                return;
             }
         } catch (error) {
             console.error("Error getting last ping information:", error);
-            setLastPing("Error getting data");
         }
     };
 
     // Send ping to factory
     const handlePingAll = async () => {
         try {
-            // First check the network
-            const provider = signer.provider as ethers.BrowserProvider;
-            const network = await provider.getNetwork();
-            const chainId = Number(network.chainId);
-
-            // Arbitrum Sepolia network ID: 421614
-            if (chainId !== 421614) {
-                throw new Error("Please switch to Arbitrum Sepolia network in your wallet");
-            }
-
             setPingLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
 
-            console.log("📤 Sending ping...");
-
             // Get gas overrides to avoid "maxFeePerGas less than block base fee" error
             const gasOverrides = await getGasOverrides(signer);
-            console.log('gasOverrides', gasOverrides);
 
             // Send one ping to factory with explicit gas fee
             const pingTx = await factory.ping(gasOverrides);
-            console.log("⏳ Waiting for ping transaction confirmation...");
 
             // Wait for transaction confirmation
             await pingTx.wait();
-            console.log("✅ Ping transaction confirmed:", pingTx.hash);
 
             // Add delay for blockchain state update
-            console.log("⏳ Waiting for blockchain state update...");
             await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // Update last ping information multiple times for reliability
-            let pingUpdated = false;
-            for (let attempt = 1; attempt <= 3; attempt++) {
-                console.log(`🔄 Attempt ${attempt} to update ping information...`);
-                await fetchLastPing();
-
-                // Check if time was updated (should be within last 5 minutes)
-                const currentTime = new Date();
-                const fiveMinutesAgo = new Date(currentTime.getTime() - 5 * 60 * 1000);
-
-                // If lastPing contains "No data" or "Error", try again
-                if (!lastPing.includes("No data") && !lastPing.includes("Error")) {
-                    try {
-                        const lastPingDate = new Date(lastPing);
-                        if (lastPingDate > fiveMinutesAgo) {
-                            console.log("✅ Ping time successfully updated");
-                            pingUpdated = true;
-                            break;
-                        }
-                    } catch (dateError) {
-                        console.log("⚠️ Date parsing error, trying again...");
-                    }
-                }
-
-                if (attempt < 3) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
-            }
-
-            if (!pingUpdated) {
-                console.log("⚠️ Ping time may not be fully updated, but operation completed");
-            }
+            // Update last ping information
+            console.log("⏳ Update last ping information...");
+            await fetchLastPing();
 
             toast({
                 title: "Success!",
