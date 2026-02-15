@@ -49,34 +49,20 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
         const nextTime = parseInt(nextTransferTime);
         const lastActivity = parseInt(ownerLastActivity);
         const waitingSeconds = parseInt(waitingPeriod);
-        const currentTime = Math.floor(Date.now() / 1000);
+        const now = Math.floor(Date.now() / 1000);
 
-        // If nextTransferTime is 0, check waiting period after last activity
-        if (nextTime === 0) {
-            const timeAfterLastActivity = currentTime - lastActivity;
-            if (timeAfterLastActivity >= waitingSeconds) {
-                return "Available now";
-            } else {
-                const timeToWait = waitingSeconds - timeAfterLastActivity;
-                return `In ${formatTime(timeToWait)} (after owner activity)`;
-            }
+        // If nextTransferTime is in the future, that's the earliest possible claim
+        if (nextTime > now) {
+            return `In ${formatTime(nextTime - now)}`;
         }
 
-        // If there's nextTransferTime, use it
-        if (nextTime <= currentTime) {
-            // Additionally check waiting period after last activity
-            const timeAfterLastActivity = currentTime - lastActivity;
-            if (timeAfterLastActivity >= waitingSeconds) {
-                return "Available now";
-            } else {
-                const timeToWait = waitingSeconds - timeAfterLastActivity;
-                return `In ${formatTime(timeToWait)} (waiting period after activity)`;
-            }
+        // Otherwise (0 or past), check waiting period after owner's last activity
+        const waitingEndsAt = lastActivity + waitingSeconds;
+        if (now >= waitingEndsAt) {
+            return "Available now";
         }
 
-        // If nextTime is greater than current time, show time until nextTime
-        const timeLeft = nextTime - currentTime;
-        return `In ${formatTime(timeLeft)}`;
+        return `In ${formatTime(waitingEndsAt - now)} (waiting period after activity)`;
     };
 
     // Get will information for heir with caching and retry
