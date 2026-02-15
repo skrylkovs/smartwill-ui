@@ -32,45 +32,40 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const borderColor = useColorModeValue('gray.200', 'gray.600');
 
     // Get will information
-    const fetchWillInfo = async (willAddress: string): Promise<WillInfo | null> => {
-        try {
-            return await pRetry(async () => {
-                const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
+    const fetchWillInfo = async (willAddress: string): Promise<WillInfo> => {
+        return await pRetry(async () => {
+            const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
 
-                const [balance, heir, heirName, heirRole, transferAmount, transferFrequency, waitingPeriod, limit] = await Promise.all([
-                    contract.getBalance(),
-                    contract.heir(),
-                    contract.heirName(),
-                    contract.heirRole(),
-                    contract.transferAmount(),
-                    contract.transferFrequency(),
-                    contract.willActivateWaitingPeriod(),
-                    contract.limit()
-                ]);
+            const [balance, heir, heirName, heirRole, transferAmount, transferFrequency, waitingPeriod, limit] = await Promise.all([
+                contract.getBalance(),
+                contract.heir(),
+                contract.heirName(),
+                contract.heirRole(),
+                contract.transferAmount(),
+                contract.transferFrequency(),
+                contract.willActivateWaitingPeriod(),
+                contract.limit()
+            ]);
 
-                return {
-                    address: willAddress,
-                    balance: ethers.formatEther(balance),
-                    heir,
-                    heirName,
-                    heirRole,
-                    transferAmount: ethers.formatEther(transferAmount),
-                    transferFrequency: transferFrequency.toString(),
-                    waitingPeriod: waitingPeriod.toString(),
-                    limit: ethers.formatEther(limit)
-                };
-            }, {
-                retries: 3,
-                minTimeout: 1000,
-                factor: 1.5,
-                onFailedAttempt: ({ attemptNumber, retriesLeft, error }) => {
-                    console.warn(`Retry ${attemptNumber}/${attemptNumber + retriesLeft} for contract ${willAddress}: ${error.message}`);
-                }
-            });
-        } catch (error) {
-            console.error(`Error getting will information ${willAddress} after all retries:`, error);
-            return null;
-        }
+            return {
+                address: willAddress,
+                balance: ethers.formatEther(balance),
+                heir,
+                heirName,
+                heirRole,
+                transferAmount: ethers.formatEther(transferAmount),
+                transferFrequency: transferFrequency.toString(),
+                waitingPeriod: waitingPeriod.toString(),
+                limit: ethers.formatEther(limit)
+            };
+        }, {
+            retries: 3,
+            minTimeout: 1000,
+            factor: 1.5,
+            onFailedAttempt: ({ attemptNumber, retriesLeft, error }) => {
+                console.warn(`Retry ${attemptNumber}/${attemptNumber + retriesLeft} for contract ${willAddress}: ${error.message}`);
+            }
+        });
     };
 
     // Get last ping from factory
@@ -225,10 +220,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             setLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
 
-            // Try to get current user's wills using different methods
             let willsList: string[] = [];
-
-            // Method 1: Try getMyWills() if available
             try {
                 willsList = await factory.getMyWills();
             } catch (error) {
@@ -246,14 +238,10 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             console.log("📄 Will addresses willsList:", willsList);
 
             // Get information about each will
-            const willsInfoPromises = willsList.map(address => fetchWillInfo(address));
-            const willsInfoResults = await Promise.all(willsInfoPromises);
+            const wills = await Promise.all(willsList.map(address => fetchWillInfo(address)));
+            console.log("✅ Successfully loaded wills:", wills);
 
-            // Filter out null results
-            const validWills = willsInfoResults.filter((will): will is WillInfo => will !== null);
-            console.log("✅ Successfully loaded wills:", validWills.length);
-
-            setWills(validWills);
+            setWills(wills);
 
             // Get last ping information
             await fetchLastPing();
