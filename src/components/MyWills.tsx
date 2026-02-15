@@ -142,9 +142,6 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             const wills = await Promise.all(willsList.map(address => fetchWillInfo(address)));
             setWills(wills);
 
-            // Get last ping information
-            await fetchLastPing();
-
         } catch (error) {
             console.error("💥 General error loading wills:", error);
             toast({
@@ -183,6 +180,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     useEffect(() => {
         if (signer && factoryAddress) {
             loadWills();
+            fetchLastPing();
         }
     }, [signer, factoryAddress]);
 
