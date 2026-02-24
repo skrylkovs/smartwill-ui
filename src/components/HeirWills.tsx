@@ -31,6 +31,8 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
     const cacheRef = useRef<Map<string, HeirWillInfo>>(new Map());
     const lastLoadRef = useRef<number>(0);
     const requestCountRef = useRef<number>(0);
+    const toastRef = useRef(toast);
+    toastRef.current = toast;
 
     const cardBg = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.800', 'white');
@@ -141,23 +143,14 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
 
     // Load wills where user is heir with protection from duplicate calls
     const loadHeirWills = useCallback(async () => {
-        // Prevent duplicate calls
         if (loadingRef.current) {
-            console.log("⏳ Loading already in progress, skipping...");
+            console.log("⏭️ Skipping duplicate heir wills loading (already in progress)");
             return;
         }
-
-        // Debouncing - don't load more often than once every 2 seconds
-        const now = Date.now();
-        if (now - lastLoadRef.current < 2000) {
-            console.log(`⏰ Too frequent calls (${now - lastLoadRef.current}ms ago), skipping...`);
-            return;
-        }
-
         try {
             console.log("🚀 Starting heir wills loading...");
             loadingRef.current = true;
-            lastLoadRef.current = now;
+            lastLoadRef.current = Date.now();
             setLoading(true);
             setLoadingProgress({current: 0, total: 0});
 
@@ -165,26 +158,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
             const userAddress = await signer.getAddress();
 
             // Get all deployed wills
-            let willsList = [];
-            try {
-                willsList = await factory.getDeployedWills();
-            } catch (error) {
-                console.log("Error calling getDeployedWills, trying alternative method:", error);
-
-                let index = 0;
-                let continueLoop = true;
-
-                while (continueLoop) {
-                    try {
-                        const willAddress = await factory.deployedWills(index);
-                        willsList.push(willAddress);
-                        index++;
-                    } catch (error) {
-                        console.log(`Reached end of wills list at index ${index}`);
-                        continueLoop = false;
-                    }
-                }
-            }
+            const willsList = await factory.getDeployedWills();
 
             console.log("Checking wills for heir:", willsList.length);
             setLoadingProgress({current: 0, total: willsList.length});
@@ -210,9 +184,6 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                     console.warn(`Skipping will ${address} due to error:`, error);
                     continue;
                 }
-
-                // Small pause between requests to avoid RPC overload
-                await new Promise(resolve => setTimeout(resolve, 100));
             }
 
             console.log(`✅ Found ${validHeirWills.length} wills for heir`);
@@ -220,7 +191,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
 
         } catch (error) {
             console.error("❌ Error loading heir wills:", error);
-            toast({
+            toastRef.current({
                 title: "Loading Error",
                 description: "Failed to load inheritance data",
                 status: "error",
@@ -231,7 +202,7 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
             setLoading(false);
             loadingRef.current = false;
         }
-    }, [signer, factoryAddress, fetchHeirWillInfo, toast]);
+    }, [signer, factoryAddress, fetchHeirWillInfo]);
 
     // Method to claim inheritance from will
     const claimInheritance = async (willAddress: string) => {
@@ -281,38 +252,13 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
         }
     };
 
-    // Add imperativeHandle for external control
-    useImperativeHandle(ref, () => ({
-        refreshWills: () => {
-            // Clear cache on forced refresh
-            cacheRef.current.clear();
-            if (signer) {
-                loadHeirWills();
-                toast({
-                    title: "Data Update",
-                    description: "Loading inheritance data...",
-                    status: "info",
-                    duration: 2000,
-                    isClosable: true
-                });
-            }
-        }
-    }));
-
-    // Load on component mount with optimization
-    useEffect(() => {
-        if (signer && factoryAddress) {
-            loadHeirWills();
-        }
-    }, [loadHeirWills]); // Change dependency to memoized function
-
     // Method to force data refresh
     const refreshWills = useCallback(() => {
         // Clear cache on forced refresh
         cacheRef.current.clear();
         if (signer) {
             loadHeirWills();
-            toast({
+            toastRef.current({
                 title: "Data Update",
                 description: "Loading inheritance data...",
                 status: "info",
@@ -320,7 +266,20 @@ const HeirWills = forwardRef(({ signer, factoryAddress }: HeirWillsProps, ref) =
                 isClosable: true
             });
         }
-    }, [signer, loadHeirWills, toast]);
+    }, [signer, loadHeirWills]);
+
+    // Add imperativeHandle for external control
+    useImperativeHandle(ref, () => ({
+        loadHeirWills
+    }));
+
+    // Load on component mount (or when signer/factory change)
+    useEffect(() => {
+        if (signer && factoryAddress) {
+            loadHeirWills();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [signer, factoryAddress]);
 
     // Memoized statistical data
     const statistics = useMemo(() => {
