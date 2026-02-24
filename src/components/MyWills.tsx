@@ -1,4 +1,4 @@
-import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle, useCallback, useMemo, useRef } from "react";
 import { ethers } from "ethers";
 import { getGasOverrides } from "../utils/gas";
 import {
@@ -26,6 +26,8 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const [lastPing, setLastPing] = useState<string>("Loading...");
     const [pingLoading, setPingLoading] = useState(false);
     const toast = useToast();
+    const toastRef = useRef(toast);
+    toastRef.current = toast;
     const { run: runLatest, loading } = useLatestAsync<WillInfo[]>();
 
     const cardBg = useColorModeValue('white', 'gray.800');
@@ -33,8 +35,12 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const borderColor = useColorModeValue('gray.200', 'gray.600');
     const contractBg = useColorModeValue('gray.50', 'gray.700');
 
-    // Get will information
-    const fetchWillInfo = async (willAddress: string): Promise<WillInfo> => {
+    const statistics = useMemo(() => ({
+        totalWills: wills.length,
+        totalBalance: wills.reduce((sum, w) => sum + parseFloat(w.balance || '0'), 0).toFixed(4),
+    }), [wills]);
+
+    const fetchWillInfo = useCallback(async (willAddress: string): Promise<WillInfo> => {
         return await pRetry(async () => {
             const contract = new ethers.Contract(willAddress, SmartWillAbi.abi, signer);
 
@@ -68,10 +74,9 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 console.warn(`Retry ${attemptNumber}/${attemptNumber + retriesLeft} for contract ${willAddress}: ${error.message}`);
             }
         });
-    };
+    }, [signer]);
 
-    // Get last ping from factory
-    const fetchLastPing = async () => {
+    const fetchLastPing = useCallback(async () => {
         try {
             if (!signer) return;
 
@@ -85,33 +90,25 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
         } catch (error) {
             console.error("Error getting last ping information:", error);
         }
-    };
+    }, [signer, factoryAddress]);
 
-    // Send ping to factory
-    const handlePingAll = async () => {
+    const handlePingAll = useCallback(async () => {
         try {
             setPingLoading(true);
             const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
 
-            // Get gas overrides to avoid "maxFeePerGas less than block base fee" error
             const gasOverrides = await getGasOverrides(signer);
-
-            // Send one ping to factory with explicit gas fee
             const pingTx = await factory.ping(gasOverrides);
-
-            // Wait for transaction confirmation
             await pingTx.wait();
 
-            // Add delay for blockchain state update
             await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // Update last ping information
             console.log("⏳ Update last ping information...");
             await fetchLastPing();
 
-            toast({
+            toastRef.current({
                 title: "Success!",
-                description: `You confirmed that you are alive. Time updated.`,
+                description: "You confirmed that you are alive. Time updated.",
                 status: "success",
                 duration: 5000,
                 isClosable: true,
@@ -119,7 +116,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
 
         } catch (error) {
             console.error("Error sending ping:", error);
-            toast({
+            toastRef.current({
                 title: "Error",
                 description: "Failed to confirm that you are alive. Check console for details.",
                 status: "error",
@@ -129,10 +126,9 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
         } finally {
             setPingLoading(false);
         }
-    };
+    }, [signer, factoryAddress, fetchLastPing]);
 
-    // Method to load wills
-    const loadWills = async () => {
+    const loadWills = useCallback(async () => {
         try {
             const result = await runLatest(async () => {
                 const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
@@ -142,7 +138,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
             if (result) setWills(result);
         } catch (error) {
             console.error("💥 General error loading wills:", error);
-            toast({
+            toastRef.current({
                 title: "Loading Error",
                 description: "Failed to load wills data. Check console for details.",
                 status: "error",
@@ -150,13 +146,12 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 isClosable: true
             });
         }
-    };
+    }, [runLatest, signer, factoryAddress, fetchWillInfo]);
 
-    // Method to force data refresh
-    const refreshWills = () => {
+    const refreshWills = useCallback(() => {
         if (signer) {
             loadWills();
-            toast({
+            toastRef.current({
                 title: "Data Update",
                 description: "Loading latest will data...",
                 status: "info",
@@ -164,7 +159,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 isClosable: true
             });
         }
-    };
+    }, [signer, loadWills]);
 
     // Export methods via ref
     useImperativeHandle(ref, () => ({
@@ -172,13 +167,12 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
         refreshWills
     }));
 
-    // Loading hook on mount
     useEffect(() => {
         if (signer && factoryAddress) {
             loadWills();
             fetchLastPing();
         }
-    }, [signer, factoryAddress]);
+    }, [signer, factoryAddress, loadWills, fetchLastPing]);
 
     return (
         <VStack spacing={8} align="stretch" w="100%">
@@ -245,7 +239,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                             <CardBody>
                                 <Stat>
                                     <StatLabel color={textColor} fontSize={{ base: "2xl", xl: "md" }}>Total Wills</StatLabel>
-                                    <StatNumber color="#081781" fontSize={{ base: "4xl", xl: "3xl" }}>{wills.length}</StatNumber>
+                                    <StatNumber color="#081781" fontSize={{ base: "4xl", xl: "3xl" }}>{statistics.totalWills}</StatNumber>
                                     <StatHelpText fontSize={{ base: "xl", xl: "sm" }}>Active contracts</StatHelpText>
                                 </Stat>
                             </CardBody>
@@ -256,7 +250,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                                 <Stat>
                                     <StatLabel color={textColor} fontSize={{ base: "2xl", xl: "md" }}>Total Balance</StatLabel>
                                     <StatNumber color="green.500" fontSize={{ base: "4xl", xl: "3xl" }}>
-                                        {wills.reduce((sum, will) => sum + parseFloat(will.balance || '0'), 0).toFixed(4)} ETH
+                                        {statistics.totalBalance} ETH
                                     </StatNumber>
                                     <StatHelpText fontSize={{ base: "xl", xl: "sm" }}>In all wills</StatHelpText>
                                 </Stat>
