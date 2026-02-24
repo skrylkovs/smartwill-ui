@@ -13,6 +13,7 @@ import SmartWillAbi from "../contracts/SmartWill.json";
 import factoryAbi from "../contracts/SmartWillFactory.json";
 import type { WillInfo } from "../types";
 import { formatTime } from "../utils/format";
+import { useLatestAsync } from "../hooks/useLatestAsync";
 
 interface MyWillsProps {
     signer: ethers.Signer;
@@ -23,13 +24,14 @@ interface MyWillsProps {
 const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     const [wills, setWills] = useState<WillInfo[]>([]);
     const [lastPing, setLastPing] = useState<string>("Loading...");
-    const [loading, setLoading] = useState(false);
     const [pingLoading, setPingLoading] = useState(false);
     const toast = useToast();
+    const { run: runLatest, loading } = useLatestAsync<WillInfo[]>();
 
     const cardBg = useColorModeValue('white', 'gray.800');
     const textColor = useColorModeValue('gray.600', 'gray.300');
     const borderColor = useColorModeValue('gray.200', 'gray.600');
+    const contractBg = useColorModeValue('gray.50', 'gray.700');
 
     // Get will information
     const fetchWillInfo = async (willAddress: string): Promise<WillInfo> => {
@@ -132,16 +134,12 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
     // Method to load wills
     const loadWills = async () => {
         try {
-            setLoading(true);
-            const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
-
-            // Get will addresses from factory
-            const willsList: string[] = await factory.getMyWills();
-
-            // Get information about each will
-            const wills = await Promise.all(willsList.map(address => fetchWillInfo(address)));
-            setWills(wills);
-
+            const result = await runLatest(async () => {
+                const factory = new ethers.Contract(factoryAddress, factoryAbi.abi, signer);
+                const willsList: string[] = await factory.getMyWills();
+                return Promise.all(willsList.map(address => fetchWillInfo(address)));
+            });
+            if (result) setWills(result);
         } catch (error) {
             console.error("💥 General error loading wills:", error);
             toast({
@@ -151,8 +149,6 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
                 duration: 5000,
                 isClosable: true
             });
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -376,7 +372,7 @@ const MyWills = forwardRef(({ signer, factoryAddress }: MyWillsProps, ref) => {
 
                                     <Divider my={4} />
 
-                                    <Box p={3} bg={useColorModeValue('gray.50', 'gray.700')} borderRadius="lg">
+                                    <Box p={3} bg={contractBg} borderRadius="lg">
                                         <Text fontSize={{ base: "lg", xl: "xs" }} color={textColor} fontFamily="monospace">
                                             <strong>Contract Address:</strong> {will.address}
                                         </Text>
